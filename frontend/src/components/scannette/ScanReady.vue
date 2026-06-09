@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Icon from '../Icon.vue';
 
 const props = defineProps<{ error?: string | null; busy?: boolean }>();
@@ -13,8 +13,6 @@ function focus() {
   nextTick(() => inp.value?.focus());
 }
 
-// La scannette Zebra agit en "wedge clavier" : elle tape le code dans le champ focalisé
-// et envoie Entrée. Le même champ gère donc le scan ET la saisie manuelle.
 function submit() {
   const v = code.value.trim();
   code.value = '';
@@ -22,9 +20,34 @@ function submit() {
   focus();
 }
 
-onMounted(focus);
-watch(() => props.error, focus);
-defineExpose({ focus });
+// La scannette Zebra agit en "wedge clavier" : elle injecte le code touche par touche
+// puis envoie Entrée. On l'écoute au niveau de window (sans champ focalisé, donc sans
+// ouvrir le clavier virtuel du téléphone). La saisie manuelle passe, elle, par le <form>
+// quand l'utilisateur tape dans l'input — le listener s'efface alors pour ne pas doubler.
+let buf = '';
+let last = 0;
+const GAP_MS = 50; // un wedge enchaîne les frappes < ~50ms ; au-delà on reset le buffer
+
+function onKeydown(e: KeyboardEvent) {
+  const a = document.activeElement;
+  if (a instanceof HTMLInputElement || a instanceof HTMLTextAreaElement) return;
+  if (props.busy) return;
+
+  const now = e.timeStamp;
+  if (now - last > GAP_MS) buf = '';
+  last = now;
+
+  if (e.key === 'Enter') {
+    const v = buf.trim();
+    buf = '';
+    if (v) emit('scanned', v);
+    return;
+  }
+  if (e.key.length === 1) buf += e.key;
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
