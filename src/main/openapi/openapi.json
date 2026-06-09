@@ -2,6 +2,15 @@
   "openapi" : "3.1.0",
   "components" : {
     "schemas" : {
+      "AppConfig" : {
+        "required" : [ "staging" ],
+        "type" : "object",
+        "properties" : {
+          "staging" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "LocalDate" : {
         "type" : "string",
         "format" : "date",
@@ -152,11 +161,32 @@
     }
   },
   "tags" : [ {
+    "name" : "Configuration"
+  }, {
     "name" : "Produits"
   }, {
     "name" : "Relevé"
   } ],
   "paths" : {
+    "/api/config" : {
+      "get" : {
+        "summary" : "Drapeaux d'environnement exposés au front (bannière staging, etc.)",
+        "operationId" : "getConfig",
+        "tags" : [ "Configuration" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products/{barcode}" : {
       "get" : {
         "summary" : "Chercher un produit par code-barres (EAN)",
