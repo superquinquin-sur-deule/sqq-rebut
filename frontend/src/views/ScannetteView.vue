@@ -67,10 +67,10 @@ function cancel() {
 }
 
 onMounted(() => {
-  store.fetch();
+  store.fetchToday();
   // "Session partagée en direct" : on rafraîchit régulièrement (sauf pendant une saisie).
   poll = window.setInterval(() => {
-    if (phase.value !== 'entry') store.fetch();
+    if (phase.value !== 'entry') store.fetchToday();
   }, 5000);
 });
 onUnmounted(() => {

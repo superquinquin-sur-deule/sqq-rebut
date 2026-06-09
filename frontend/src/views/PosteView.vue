@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import Icon from '../components/Icon.vue';
 import ReleveTable from '../components/poste/ReleveTable.vue';
 import RebutModal from '../components/poste/RebutModal.vue';
 import { useReleveStore } from '../store/releve';
-import { URG, fmtShort, fmtLong, today, type Urgency } from '../lib/dates';
+import { URG, fmtLong, parseISO, type Urgency } from '../lib/dates';
 import logo from '../assets/sqq-logo.svg';
 import type { ReleveLineDto } from '../api';
 
 const store = useReleveStore();
+const route = useRoute();
 
 const view = ref<'urgence' | 'tableau'>('urgence');
 const rayonFilter = ref('all');
@@ -21,7 +23,7 @@ let toastTimer: number | undefined;
 let poll: number | undefined;
 
 const URG_ORDER: Record<string, number> = { j0: 0, j1: 1, j2: 2 };
-const dateLabel = computed(() => fmtLong(today()));
+const dateLabel = computed(() => (store.date ? fmtLong(parseISO(store.date)) : ''));
 
 const filtered = computed(() =>
   store.lines.filter(
@@ -94,8 +96,14 @@ async function refresh() {
   toast('Relevé actualisé');
 }
 
+watch(
+  () => route.params.releveId,
+  (id) => {
+    if (id) store.fetchById(Number(id));
+  },
+  { immediate: true },
+);
 onMounted(() => {
-  store.fetch();
   poll = window.setInterval(() => store.fetch(), 5000);
 });
 onUnmounted(() => {
@@ -109,6 +117,10 @@ onUnmounted(() => {
     <div class="poste-head">
       <img :src="logo" alt="SuperQuinquin" />
       <div class="brand">SuperQuinquin<small>Relevé DLC</small></div>
+      <nav class="poste-nav">
+        <router-link class="nav-link" :to="{ name: 'historique' }"><Icon name="clock" :size="16" />Historique</router-link>
+        <router-link class="nav-link" :to="{ name: 'scannette' }"><Icon name="scan" :size="16" />Scannette</router-link>
+      </nav>
     </div>
 
     <div class="dk">

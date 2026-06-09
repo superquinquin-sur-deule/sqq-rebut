@@ -31,11 +31,30 @@ public class ReleveService {
 
     @Transactional
     public ReleveDto view(LocalDate date) {
-        LocalDate today = LocalDate.now();
+        Releve r = Releve.find("date", date).firstResult();
         List<ReleveLineDto> dtos = ReleveLine.<ReleveLine>list("releve.date", date).stream()
-                .map(l -> ReleveLineDto.from(l, today))
+                .map(l -> ReleveLineDto.from(l, date))
                 .toList();
-        return new ReleveDto(date, dtos);
+        return new ReleveDto(r != null ? r.id : null, date, dtos);
+    }
+
+    @Transactional
+    public ReleveDto viewById(Long id) {
+        Releve r = Releve.findById(id);
+        if (r == null) {
+            throw new NotFoundException("Relevé introuvable: " + id);
+        }
+        List<ReleveLineDto> dtos = ReleveLine.<ReleveLine>list("releve", r).stream()
+                .map(l -> ReleveLineDto.from(l, r.date))
+                .toList();
+        return new ReleveDto(r.id, r.date, dtos);
+    }
+
+    @Transactional
+    public List<ReleveSummaryDto> listSummaries() {
+        return Releve.<Releve>list("order by date desc").stream()
+                .map(r -> new ReleveSummaryDto(r.id, r.date, ReleveLine.count("releve", r)))
+                .toList();
     }
 
     @Transactional
