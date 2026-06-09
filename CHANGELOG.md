@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/superquinquin-sur-deule/sqq-dlc/compare/v0.3.0...v0.4.0) (2026-06-09)
+
+
+### Features
+
+* cleanup scanettes screen ([f73c1b2](https://github.com/superquinquin-sur-deule/sqq-dlc/commit/f73c1b20a64403b7b409c43057a3ee5a1b58e682))
+
 ## [0.3.0](https://github.com/superquinquin-sur-deule/sqq-dlc/compare/v0.2.1...v0.3.0) (2026-06-09)
 
 
