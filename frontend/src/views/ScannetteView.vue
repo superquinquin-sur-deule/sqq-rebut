@@ -68,7 +68,6 @@ function cancel() {
 
 onMounted(() => {
   store.fetchToday();
-  // "Session partagée en direct" : on rafraîchit régulièrement (sauf pendant une saisie).
   poll = window.setInterval(() => {
     if (phase.value !== 'entry') store.fetchToday();
   }, 5000);
@@ -83,14 +82,6 @@ onUnmounted(() => {
   <div class="app-scannette">
     <div class="device">
       <div class="sc">
-        <div class="sc-head">
-          <div class="sc-head-row">
-            <div>
-              <h1>Relevé DLC</h1>
-              <div class="sub">{{ dateLabel }}</div>
-            </div>
-          </div>
-        </div>
 
         <div class="sc-body">
           <template v-if="tab === 'scan'">

@@ -77,8 +77,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
       </button>
     </form>
     <div v-if="props.error" class="scan-error">{{ props.error }}</div>
-    <div class="scan-trigger-hint">
-      <Icon name="barcode" :size="16" />scanne ou tape le code puis <kbd>Entrée</kbd>
-    </div>
   </div>
 </template>
