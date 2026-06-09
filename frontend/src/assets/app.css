@@ -1757,3 +1757,38 @@ input, select {
     text-transform: uppercase;
     color: var(--sqq-brown);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   BANDEAU STAGING — ruban rouge penché dans l'angle haut-droit,
+   affiché quand SQQ_DLC_STAGING=true (cf. ConfigResource / App.vue).
+   z-index au-dessus de tout (modales : 200) ; n'intercepte aucun clic.
+   ════════════════════════════════════════════════════════════════ */
+.staging-ribbon {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 130px;
+    height: 130px;
+    overflow: hidden;
+    z-index: 1000;
+    pointer-events: none;
+    user-select: none;
+}
+
+.staging-ribbon span {
+    position: absolute;
+    top: 30px;
+    right: -40px;
+    width: 180px;
+    transform: rotate(45deg);
+    background: #d8281b;
+    color: #fff;
+    text-align: center;
+    padding: 6px 0;
+    font-family: var(--font-display);
+    font-weight: var(--fw-black);
+    font-size: 13px;
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    box-shadow: var(--shadow-md);
+}

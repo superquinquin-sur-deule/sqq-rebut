@@ -45,3 +45,5 @@ nb-configuration.xml
 .certs/
 .claude
 CLAUDE.md
+
+src/main/openapi
