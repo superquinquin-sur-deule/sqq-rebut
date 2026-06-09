@@ -1,0 +1,261 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    LocalDate:
+      type: string
+      format: date
+      examples:
+      - 2022-03-10
+    NewLineRequest:
+      type: object
+      properties:
+        barcode:
+          type: string
+        dlc:
+          $ref: "#/components/schemas/LocalDate"
+        qty:
+          type: integer
+          format: int32
+    Product:
+      required:
+      - id
+      - barcode
+      - name
+      - uom
+      - uomId
+      - price
+      - qtyAvailable
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        barcode:
+          type: string
+        name:
+          type: string
+        rayon:
+          type: string
+        uom:
+          type: string
+        uomId:
+          type: integer
+          format: int64
+        price:
+          type: number
+          format: double
+        qtyAvailable:
+          type: number
+          format: double
+    RebutRequest:
+      type: object
+      properties:
+        lineIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    RebutResult:
+      required:
+      - created
+      - dryRun
+      - lines
+      type: object
+      properties:
+        created:
+          type: integer
+          format: int32
+        dryRun:
+          type: boolean
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReleveLineDto"
+    ReleveDto:
+      required:
+      - date
+      - lines
+      type: object
+      properties:
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReleveLineDto"
+    ReleveLineDto:
+      type: object
+      required:
+      - id
+      - barcode
+      - name
+      - dlc
+      - urgency
+      - qty
+      - sent
+      properties:
+        id:
+          type: integer
+          format: int64
+        barcode:
+          type: string
+        name:
+          type: string
+        rayon:
+          type: string
+        uom:
+          type: string
+        dlc:
+          $ref: "#/components/schemas/LocalDate"
+        urgency:
+          type: string
+        qty:
+          type: integer
+          format: int32
+        sent:
+          type: boolean
+        scrapRef:
+          type: string
+    UpdateQtyRequest:
+      type: object
+      properties:
+        qty:
+          type: integer
+          format: int32
+tags:
+- name: Produits
+- name: Relevé
+paths:
+  /api/products/{barcode}:
+    get:
+      summary: Chercher un produit par code-barres (EAN)
+      operationId: getProductByBarcode
+      tags:
+      - Produits
+      parameters:
+      - name: barcode
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /api/releve:
+    get:
+      summary: "Lire le relevé d'une date (défaut : aujourd'hui)"
+      operationId: getReleve
+      tags:
+      - Relevé
+      parameters:
+      - name: date
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleveDto"
+  /api/releve/lines:
+    post:
+      summary: Ajouter une ligne scannée
+      operationId: addLine
+      tags:
+      - Relevé
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewLineRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleveLineDto"
+        "400":
+          description: Bad Request
+  /api/releve/lines/{id}:
+    put:
+      summary: Modifier la quantité d'une ligne
+      operationId: updateLineQty
+      tags:
+      - Relevé
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQtyRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleveLineDto"
+        "400":
+          description: Bad Request
+    delete:
+      summary: Supprimer une ligne
+      operationId: deleteLine
+      tags:
+      - Relevé
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/releve/rebut:
+    post:
+      summary: Envoyer les lignes J-0 au rebut (stock.scrap Odoo)
+      operationId: sendRebut
+      tags:
+      - Relevé
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RebutRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RebutResult"
+        "400":
+          description: Bad Request
+info:
+  title: Relevé DLC API
+  version: 1.0.0
+  description: API de relevé des DLC produits frais (SuperQuinquin) — lookup produit
+    Odoo + mise au rebut.
+servers:
+- url: http://localhost:8080
+  description: Auto generated value
+- url: http://0.0.0.0:8080
+  description: Auto generated value

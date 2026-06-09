@@ -1,0 +1,278 @@
+/* SuperQuinquin Design System — colors & type tokens
+   Source: Charte graphique V10 - Juillet 2019
+   Brand: cooperative & participatory supermarket of Lille (Fives)
+   Slogan: "Le supermarché dont tu es le héros"
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap");
+
+:root {
+  /* ----------------------------------------------------------------
+     COLORS — Primary
+     ----------------------------------------------------------------
+     The brand sits on two main colors: a vivid sunshine YELLOW and
+     a near-black warm BROWN. Yellow is the energetic, optimistic
+     accent; brown carries the text and structural weight.
+  */
+  --sqq-yellow:           #F1DC43;  /* Pantone 114 C  — primary */
+  --sqq-yellow-soft:      #FFF4C8;  /* lighter wash, derived */
+  --sqq-yellow-deep:      #E8C81F;  /* hover / pressed, derived */
+
+  --sqq-brown:            #3C312E;  /* Pantone 421 C — primary dark */
+  --sqq-brown-ink:        #2A2220;  /* pressed / heavier text */
+  --sqq-brown-soft:       #5C4F4B;  /* secondary text */
+
+  /* ----------------------------------------------------------------
+     COLORS — Complementary
+     Four supporting hues, all desaturated & earthy. Used sparingly
+     to differentiate commissions/sections or for limited-edition
+     materials. Never as the primary brand color.
+  */
+  --sqq-sage:        #CBBBA0;  /* Pantone 452 C */
+  --sqq-orange:      #D68230;  /* Pantone 7412 C */
+  --sqq-terracotta:  #9F3122;  /* Pantone 484 C */
+  --sqq-teal:        #00747F;  /* Pantone 7714 C */
+
+  /* ----------------------------------------------------------------
+     COLORS — Neutrals (derived, not in charte)
+     For UI work the charte's two colors are not enough; these are
+     derived from --sqq-brown desaturated.
+  */
+  --sqq-paper:    #FFFDF6;  /* off-white background (warm) */
+  --sqq-cream:    #FAF5E6;  /* cards / subtle fills */
+  --sqq-line:     #E6DFCF;  /* hairline borders */
+  --sqq-mute:     #B8AFA4;  /* muted text */
+  --sqq-white:    #FFFFFF;
+
+  /* ----------------------------------------------------------------
+     SEMANTIC COLOR TOKENS
+  */
+  --color-bg:           var(--sqq-paper);
+  --color-bg-alt:       var(--sqq-cream);
+  --color-bg-inverse:   var(--sqq-brown);
+  --color-bg-accent:    var(--sqq-yellow);
+
+  --color-fg:           var(--sqq-brown);
+  --color-fg-soft:      var(--sqq-brown-soft);
+  --color-fg-mute:      var(--sqq-mute);
+  --color-fg-inverse:   var(--sqq-paper);
+  --color-fg-onYellow:  var(--sqq-brown);
+
+  --color-line:         var(--sqq-line);
+  --color-accent:       var(--sqq-yellow);
+  --color-accent-deep:  var(--sqq-yellow-deep);
+
+  --color-danger:       var(--sqq-terracotta);
+  --color-warning:      var(--sqq-orange);
+  --color-info:         var(--sqq-teal);
+  --color-success:      var(--sqq-teal);
+
+  /* ----------------------------------------------------------------
+     TYPOGRAPHY
+     Per charte: RALEWAY for all titres. HELVETICA for body
+     (substituted with system Helvetica + Roboto fallback for web).
+  */
+  --font-display:  "Raleway", "Helvetica Neue", Arial, sans-serif;
+  --font-body:     "Helvetica", "Helvetica Neue", "Roboto", Arial, sans-serif;
+  --font-mono:     "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  /* Font weights */
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semi:    600;
+  --fw-bold:    700;
+  --fw-black:   800;
+
+  /* Type scale — based on charte's use of all-caps tightly tracked headings */
+  --fs-display:  56px;   /* hero numbers, page titles */
+  --fs-h1:       40px;
+  --fs-h2:       28px;
+  --fs-h3:       22px;
+  --fs-h4:       18px;
+  --fs-body:     16px;
+  --fs-small:    14px;
+  --fs-tiny:     12px;
+  --fs-eyebrow:  13px;   /* small all-caps labels above titles */
+
+  /* Line-heights */
+  --lh-tight:   1.05;
+  --lh-snug:    1.2;
+  --lh-normal:  1.45;
+  --lh-loose:   1.6;
+
+  /* Tracking */
+  --tracking-wide:    0.08em;
+  --tracking-wider:   0.12em;
+  --tracking-tight:   -0.01em;
+
+  /* ----------------------------------------------------------------
+     SPACING — 4px base
+  */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ----------------------------------------------------------------
+     RADII — Charte uses soft rounded corners on color swatches and
+     on the "AUTRES" UI app-icon tiles. Logos are circular, banners
+     are organic ribbon curves (graphic asset, not CSS).
+  */
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-lg:   14px;
+  --r-xl:   22px;   /* color swatches / app tiles */
+  --r-pill: 999px;
+
+  /* ----------------------------------------------------------------
+     SHADOWS — Charte is mostly flat (no halo/ombré on logo).
+     UI versions use a very subtle warm shadow.
+  */
+  --shadow-sm: 0 1px 2px rgba(60,49,46,0.06), 0 1px 1px rgba(60,49,46,0.04);
+  --shadow-md: 0 2px 8px rgba(60,49,46,0.08), 0 1px 2px rgba(60,49,46,0.04);
+  --shadow-lg: 0 12px 32px rgba(60,49,46,0.10), 0 4px 8px rgba(60,49,46,0.04);
+
+  /* Yellow accent ring — used for focus/active state */
+  --ring-yellow: 0 0 0 3px rgba(241,220,67,0.55);
+
+  /* ----------------------------------------------------------------
+     BORDERS
+     The brand uses a 2-3px brown stroke on the pictograms; UI mirrors
+     that with a slightly thicker default border than typical.
+  */
+  --bw-thin:    1px;
+  --bw-default: 2px;
+  --bw-thick:   3px;
+
+  /* ----------------------------------------------------------------
+     SIGNATURE GRAPHIC ACCENT: the underline-with-yellow-bar.
+     A heading often gets a short yellow bar beneath it. Use this
+     pattern via .sqq-underline { ... } or the CSS var below.
+  */
+  --underline-yellow:
+    linear-gradient(currentColor, currentColor) 0 100% / 100% 2px no-repeat,
+    linear-gradient(var(--sqq-yellow), var(--sqq-yellow)) 0 calc(100% + 6px) / 56px 4px no-repeat;
+}
+
+/* =================================================================
+   SEMANTIC ELEMENT STYLES
+   ================================================================= */
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .sqq-h1 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-black);
+  font-size: var(--fs-h1);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--color-fg);
+  margin: 0 0 var(--space-6);
+}
+
+h2, .sqq-h2 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-fg);
+  margin: 0 0 var(--space-4);
+}
+
+h3, .sqq-h3 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semi);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-fg);
+  margin: 0 0 var(--space-3);
+}
+
+h4, .sqq-h4 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semi);
+  font-size: var(--fs-h4);
+  line-height: var(--lh-snug);
+  color: var(--color-fg);
+  margin: 0 0 var(--space-2);
+}
+
+.sqq-eyebrow {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-fg-soft);
+}
+
+p, .sqq-p {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--color-fg);
+  margin: 0 0 var(--space-4);
+  text-wrap: pretty;
+}
+
+.sqq-small  { font-size: var(--fs-small); }
+.sqq-tiny   { font-size: var(--fs-tiny);  }
+.sqq-mute   { color: var(--color-fg-mute); }
+.sqq-soft   { color: var(--color-fg-soft); }
+
+code, kbd, samp, .sqq-mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--sqq-cream);
+  border: 1px solid var(--sqq-line);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+}
+
+/* The signature yellow underline accent under a title */
+.sqq-underline {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 10px;
+}
+.sqq-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 56px;
+  height: 4px;
+  background: var(--sqq-yellow);
+}
+
+/* "PRINCIPAL" style label — underlined heading variant from the charte */
+.sqq-label {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h3);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  border-bottom: 4px solid var(--sqq-yellow);
+  padding-bottom: 4px;
+  display: inline-block;
+}
