@@ -15,6 +15,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockOdooResource.class)
@@ -33,7 +34,6 @@ class ReleveResourceTest {
 
     @Test
     void addLineComputesUrgency() {
-        // DLC dans 2 jours → j2
         given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
                         "dlc", LocalDate.now().plusDays(2).toString(), "qty", 4))
@@ -43,6 +43,26 @@ class ReleveResourceTest {
                 .body("qty", is(4))
                 .body("name", is("FERME DU CRUSOBEAU Saucisse fine fromage"))
                 .body("uom", is("kg"));
+    }
+
+    @Test
+    void addLineMergesSameProductSameDlc() {
+        int id1 = addLine(LocalDate.now().plusDays(7), 4);
+
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "dlc", LocalDate.now().plusDays(7).toString(), "qty", 3))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(7));
+
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "dlc", LocalDate.now().plusDays(6).toString(), "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", not(id1));
     }
 
     @Test
@@ -68,10 +88,8 @@ class ReleveResourceTest {
                 .body("created", greaterThanOrEqualTo(1))
                 .body("lines[0].sent", is(true));
 
-        // l'en-tête Basic Auth (staging) a bien été émis vers Odoo
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withHeader("Authorization", containing("Basic")));
-        // un create stock.scrap a bien eu lieu
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("\"create\"")));
     }

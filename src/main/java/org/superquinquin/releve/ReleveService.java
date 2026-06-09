@@ -52,10 +52,21 @@ public class ReleveService {
         Product p = products.findByBarcode(req.barcode())
                 .orElseThrow(() -> new NotFoundException("Produit inconnu pour le code-barres " + req.barcode()));
 
+        Releve releve = getOrCreate(LocalDate.now());
+        String barcode = p.barcode() != null ? p.barcode() : req.barcode();
+
+        ReleveLine existing = ReleveLine.find(
+                "releve = ?1 and barcode = ?2 and dlc = ?3 and sent = false",
+                releve, barcode, req.dlc()).firstResult();
+        if (existing != null) {
+            existing.qty += req.qty();
+            return ReleveLineDto.from(existing, LocalDate.now());
+        }
+
         ReleveLine l = new ReleveLine();
-        l.releve = getOrCreate(LocalDate.now());
+        l.releve = releve;
         l.productId = p.id();
-        l.barcode = p.barcode() != null ? p.barcode() : req.barcode();
+        l.barcode = barcode;
         l.name = p.name();
         l.rayon = p.rayon();
         l.uom = p.uom();
