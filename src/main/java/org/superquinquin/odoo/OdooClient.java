@@ -137,12 +137,14 @@ public class OdooClient {
     }
 
     private void addBasicAuth(HttpRequest.Builder rb) {
-        String user = config.basicAuth().user();
-        if (user != null && !user.isBlank()) {
-            String token = Base64.getEncoder().encodeToString(
-                    (user + ":" + config.basicAuth().password()).getBytes(StandardCharsets.UTF_8));
-            rb.header("Authorization", "Basic " + token);
-        }
+        config.basicAuth().user()
+                .filter(user -> !user.isBlank())
+                .ifPresent(user -> {
+                    String password = config.basicAuth().password().orElse("");
+                    String token = Base64.getEncoder().encodeToString(
+                            (user + ":" + password).getBytes(StandardCharsets.UTF_8));
+                    rb.header("Authorization", "Basic " + token);
+                });
     }
 
     private static String snippet(String body) {

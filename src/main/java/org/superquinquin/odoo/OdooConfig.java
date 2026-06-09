@@ -3,6 +3,8 @@ package org.superquinquin.odoo;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
+import java.util.Optional;
+
 @ConfigMapping(prefix = "odoo")
 public interface OdooConfig {
 
@@ -21,11 +23,9 @@ public interface OdooConfig {
     Scrap scrap();
 
     interface BasicAuth {
-        @WithDefault("")
-        String user();
+        Optional<String> user();
 
-        @WithDefault("")
-        String password();
+        Optional<String> password();
     }
 
     interface Rebut {
