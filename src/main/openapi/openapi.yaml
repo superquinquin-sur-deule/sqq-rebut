@@ -85,6 +85,9 @@ components:
       - lines
       type: object
       properties:
+        id:
+          type: integer
+          format: int64
         date:
           $ref: "#/components/schemas/LocalDate"
         lines:
@@ -124,6 +127,21 @@ components:
           type: boolean
         scrapRef:
           type: string
+    ReleveSummaryDto:
+      required:
+      - id
+      - date
+      - lineCount
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          $ref: "#/components/schemas/LocalDate"
+        lineCount:
+          type: integer
+          format: int64
     UpdateQtyRequest:
       type: object
       properties:
@@ -270,6 +288,41 @@ paths:
                 $ref: "#/components/schemas/RebutResult"
         "400":
           description: Bad Request
+  /api/releves:
+    get:
+      summary: Lister les relevés (récent → ancien)
+      operationId: getReleves
+      tags:
+      - Relevé
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReleveSummaryDto"
+  /api/releves/{id}:
+    get:
+      summary: Lire un relevé par id
+      operationId: getReleveById
+      tags:
+      - Relevé
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleveDto"
 info:
   title: Relevé DLC API
   version: 1.0.0

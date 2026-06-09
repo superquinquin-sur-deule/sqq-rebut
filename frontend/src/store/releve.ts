@@ -4,6 +4,8 @@ import { api, type Product, type RebutResult, type ReleveLineDto } from '../api'
 interface State {
   lines: ReleveLineDto[];
   date: string;
+  /** Relevé courant : null = celui du jour (scannette), sinon un relevé précis (poste). */
+  releveId: number | null;
   loading: boolean;
   error: string | null;
 }
@@ -13,6 +15,7 @@ export const useReleveStore = defineStore('releve', {
   state: (): State => ({
     lines: [],
     date: '',
+    releveId: null,
     loading: false,
     error: null,
   }),
@@ -33,14 +36,27 @@ export const useReleveStore = defineStore('releve', {
       this.loading = true;
       this.error = null;
       try {
-        const r = await api.getReleve();
+        const r = this.releveId != null ? await api.getReleveById(this.releveId) : await api.getReleve();
         this.date = r.date;
         this.lines = r.lines ?? [];
+        if (r.id != null) this.releveId = r.id;
       } catch (e) {
         this.error = errMsg(e);
       } finally {
         this.loading = false;
       }
+    },
+
+    /** Cible le relevé du jour (scannette). */
+    async fetchToday() {
+      this.releveId = null;
+      await this.fetch();
+    },
+
+    /** Cible un relevé précis par id (poste). */
+    async fetchById(id: number) {
+      this.releveId = id;
+      await this.fetch();
     },
 
     async lookup(barcode: string): Promise<Product> {
