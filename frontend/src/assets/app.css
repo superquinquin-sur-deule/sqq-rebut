@@ -8,10 +8,18 @@
 html, body {
     margin: 0;
     padding: 0;
+    /* Le document est verrouillé à la hauteur du viewport : il ne scrolle jamais
+       lui-même (sinon on peut faire glisser top/bottom bar hors écran). Seuls les
+       conteneurs internes (.sc-body, .entry-scroll, .sess-scroll) scrollent, et
+       seulement en cas d'overflow réel. overscroll-behavior coupe le rubber-band iOS. */
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
 }
 
 #app {
-    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 button {
@@ -36,7 +44,8 @@ input, select {
    ════════════════════════════════════════════════════════════════ */
 /* Scannette : plein écran sur l'appareil, cadre téléphone centré sur desktop. */
 .app-scannette {
-    min-height: 100dvh;
+    height: 100dvh;
+    overflow: hidden;
     background: radial-gradient(circle at 12% -10%, rgba(241, 220, 67, 0.16), transparent 45%),
     var(--sqq-paper);
     display: flex;
@@ -49,7 +58,7 @@ input, select {
     overflow: hidden;
     width: 100%;
     max-width: 430px;
-    min-height: 100dvh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background: var(--sqq-paper);
