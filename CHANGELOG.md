@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.9.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.8.0...v0.9.0) (2026-06-10)
+
+
+### Features
+
+* make app a PWA ([410f770](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/410f7708c7a300417b700258ef394cab2ef57985))
+
+
+### Documentation
+
+* document app fonctionalities in readme ([7a088e0](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/7a088e0e20796b18d92968dea2c7f6620ea71017))
+* reduce screenshots size in readme ([ff8eece](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/ff8eece5af948e81a3ba9f1860f12e2a6de726f0))
+
+
+### Continuous Integration
+
+* upgrade github actions ([3ff681e](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/3ff681e21c811918d5cd1f999880ad98240d9975))
+
 ## [0.8.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.7.0...v0.8.0) (2026-06-10)
 
 
