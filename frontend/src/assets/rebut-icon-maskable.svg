@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rebut — relevé des DLC">
+  <!-- Fond plein carré : pas de coins transparents (maskable / apple-touch) -->
+  <rect width="512" height="512" fill="#F1DC43"/>
+
+  <!-- Contenu rentré dans la zone de sécurité maskable (~78%, recentré) -->
+  <g transform="translate(266,288) scale(0.78) translate(-256,-256)">
+    <g stroke="#3C312E" stroke-width="16" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="118" y="214" width="222" height="190" rx="14" fill="#FFFDF6"/>
+      <path d="M118 214 L150 168 L308 168 L340 214" fill="#FFF4C8"/>
+      <line x1="118" y1="286" x2="340" y2="286"/>
+    </g>
+    <g>
+      <circle cx="356" cy="330" r="78" fill="#FFFDF6" stroke="#3C312E" stroke-width="16"/>
+      <g stroke="#3C312E" stroke-width="16" stroke-linecap="round">
+        <line x1="356" y1="330" x2="356" y2="288"/>
+        <line x1="356" y1="330" x2="388" y2="346"/>
+      </g>
+    </g>
+  </g>
+</svg>
