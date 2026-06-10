@@ -132,7 +132,7 @@ onUnmounted(() => {
         <div class="dk-title-row">
           <h1 class="dk-title">Relevé DLC</h1>
           <div class="dk-actions">
-            <button class="btn btn-ghost btn-sm" @click="refresh"><Icon name="refresh" :size="16" />Actualiser</button>
+            <button class="btn btn-ghost btn-md" @click="refresh"><Icon name="refresh" :size="18" />Actualiser</button>
             <button class="btn btn-dark btn-md" :disabled="!store.perteActive.length" @click="modal = 'perte'">
               <Icon name="upload" :size="18" />Envoyer les pertes au rebut{{ store.perteActive.length ? ` (${store.perteActive.length})` : '' }}
             </button>
