@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.7.0...v0.8.0) (2026-06-10)
+
+
+### Features
+
+* add healtcheck ([5c3adfe](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/5c3adfe5cfaeb266b7dc58b3fc62b71dc8eae1cd))
+* add log on destructive actions ([0700281](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/070028195a18bf91da57a6947085f7b59aeb26a2))
+* add releve date in releve page title ([cb877d8](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/cb877d8a30888b9268e493b24996c782360fe41e))
+* allow modifying releve from scannettes ([1b315cc](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/1b315ccc3e511df2340679bcfc67a0e7df50676d))
+
+
+### Miscellaneous Chores
+
+* make release please take commit types into account ([ae5f194](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/ae5f1942a56d9845b7c2914923e770ae737849c2))
+
 ## [0.7.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.6.0...v0.7.0) (2026-06-10)
 
 
