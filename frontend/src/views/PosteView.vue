@@ -130,7 +130,7 @@ onUnmounted(() => {
     <div class="dk">
       <div class="dk-top">
         <div class="dk-title-row">
-          <h1 class="dk-title">Relevé DLC</h1>
+          <h1 class="dk-title">Relevé des rebuts {{ dateLabel ? ` du ${dateLabel}` : '' }}</h1>
           <div class="dk-actions">
             <button class="btn btn-ghost btn-md" @click="refresh"><Icon name="refresh" :size="18" />Actualiser</button>
             <button class="btn btn-dark btn-md" :disabled="!store.perteActive.length" @click="modal = 'perte'">
