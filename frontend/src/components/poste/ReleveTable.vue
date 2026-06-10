@@ -37,6 +37,13 @@ function onWeight(id: number, e: Event) {
 
 <template>
   <table class="dk-table">
+    <colgroup>
+      <col style="width:38%" />
+      <col style="width:18%" />
+      <col style="width:15%" />
+      <col style="width:17%" />
+      <col style="width:12%" />
+    </colgroup>
     <thead>
       <tr v-if="props.sortable">
         <th

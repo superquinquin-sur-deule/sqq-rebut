@@ -1482,6 +1482,10 @@ button.sess-line:active {
 
 .dk-table {
     width: 100%;
+    /* fixed : sans ça chaque <table> de groupe (vue par urgence) calcule ses
+       largeurs sur son propre contenu → la colonne Rayon ne s'aligne pas d'une
+       table à l'autre. Largeurs imposées par le <colgroup> du composant. */
+    table-layout: fixed;
     border-collapse: collapse;
     background: #fff;
     border: 1px solid var(--sqq-line);
