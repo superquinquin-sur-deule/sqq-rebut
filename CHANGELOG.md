@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.5.0...v0.6.0) (2026-06-10)
+
+
+### Features
+
+* add bip sound on success/failure scan ([4dc0283](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/4dc0283c76464ffd36a6beb7e6c8ee5e355a3e2e))
+* rename app -&gt; Rebut ([aede131](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/aede1310aa01c0daf7d74429f24fd720b34b33de))
+
 ## [0.5.0](https://github.com/superquinquin-sur-deule/sqq-dlc/compare/v0.4.0...v0.5.0) (2026-06-10)
 
 
