@@ -16,6 +16,19 @@
         "format" : "date",
         "examples" : [ "2022-03-10" ]
       },
+      "Motif" : {
+        "required" : [ "id", "label" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "label" : {
+            "type" : "string"
+          }
+        }
+      },
       "NewLineRequest" : {
         "type" : "object",
         "properties" : {
@@ -28,6 +41,13 @@
           "qty" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "motifId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -117,7 +137,7 @@
       },
       "ReleveLineDto" : {
         "type" : "object",
-        "required" : [ "id", "barcode", "name", "dlc", "urgency", "qty", "sent" ],
+        "required" : [ "id", "barcode", "name", "type", "qty", "sent" ],
         "properties" : {
           "id" : {
             "type" : "integer",
@@ -135,10 +155,20 @@
           "uom" : {
             "type" : "string"
           },
+          "type" : {
+            "type" : "string"
+          },
           "dlc" : {
             "$ref" : "#/components/schemas/LocalDate"
           },
           "urgency" : {
+            "type" : "string"
+          },
+          "motifId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "motifLabel" : {
             "type" : "string"
           },
           "qty" : {
@@ -184,6 +214,8 @@
   "tags" : [ {
     "name" : "Configuration"
   }, {
+    "name" : "Motifs"
+  }, {
     "name" : "Produits"
   }, {
     "name" : "Relevé"
@@ -201,6 +233,28 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AppConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/motifs" : {
+      "get" : {
+        "summary" : "Lister les motifs de rupture (Odoo stock.scrap.origin, hors « DLC Dépassée »)",
+        "operationId" : "getMotifs",
+        "tags" : [ "Motifs" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Motif"
+                  }
                 }
               }
             }
@@ -355,7 +409,7 @@
     },
     "/api/releve/rebut" : {
       "post" : {
-        "summary" : "Envoyer les lignes J-0 au rebut (stock.scrap Odoo)",
+        "summary" : "Envoyer des lignes au rebut (stock.scrap Odoo) — DLC J-0 et/ou pertes selon les ids",
         "operationId" : "sendRebut",
         "tags" : [ "Relevé" ],
         "requestBody" : {

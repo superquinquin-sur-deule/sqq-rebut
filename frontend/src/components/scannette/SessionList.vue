@@ -18,10 +18,11 @@ const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.i
   </div>
   <div v-else class="sess-scroll">
     <div v-for="l in sorted" :key="l.id" class="sess-line">
-      <span :class="['urgdot', l.urgency]" />
+      <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.urgency]" />
       <div class="nm">
         <b>{{ l.name }}</b>
-        <span>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc)) }} · {{ l.rayon }}</span>
+        <span v-if="l.type === 'PERTE'">{{ l.motifLabel }} · {{ l.rayon }}</span>
+        <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
       </div>
       <span class="q">×{{ l.qty }}</span>
     </div>

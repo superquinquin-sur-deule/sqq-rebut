@@ -16,7 +16,7 @@ const view = ref<'urgence' | 'tableau'>('urgence');
 const rayonFilter = ref('all');
 const query = ref('');
 const sort = ref<{ key: string; dir: 'asc' | 'desc' }>({ key: 'urg', dir: 'asc' });
-const modal = ref(false);
+const modal = ref<'dlc' | 'perte' | null>(null);
 const toastMsg = ref<string | null>(null);
 
 let toastTimer: number | undefined;
@@ -47,6 +47,12 @@ const groups = computed(() =>
     .filter((g) => g.lines.length),
 );
 
+const perteLines = computed(() =>
+  filtered.value.filter((l) => l.type === 'PERTE').slice().sort((a, b) => Number(a.sent) - Number(b.sent)),
+);
+
+const urgRank = (l: ReleveLineDto) => (l.type === 'PERTE' ? 3 : URG_ORDER[l.urgency ?? ''] ?? 3);
+
 const sortedTable = computed(() => {
   const arr = filtered.value.slice();
   const s = sort.value;
@@ -54,8 +60,8 @@ const sortedTable = computed(() => {
     let av: number | string;
     let bv: number | string;
     if (s.key === 'urg') {
-      av = URG_ORDER[a.urgency];
-      bv = URG_ORDER[b.urgency];
+      av = urgRank(a);
+      bv = urgRank(b);
     } else if (s.key === 'qty') {
       av = a.qty;
       bv = b.qty;
@@ -86,9 +92,10 @@ async function del(id: number) {
   await store.remove(id);
 }
 async function confirmRebut() {
-  const ids = store.j0Active.map((l: ReleveLineDto) => l.id!).filter((x): x is number => x != null);
+  const lines = modal.value === 'perte' ? store.perteActive : store.j0Active;
+  const ids = lines.map((l: ReleveLineDto) => l.id!).filter((x): x is number => x != null);
   const res = await store.sendRebut(ids);
-  modal.value = false;
+  modal.value = null;
   toast(res.dryRun ? `${res.created} ligne(s) simulées (dry-run)` : `${res.created} ligne(s) de rebut créées dans Odoo`);
 }
 async function refresh() {
@@ -129,7 +136,10 @@ onUnmounted(() => {
           <h1 class="dk-title">Relevé DLC</h1>
           <div class="dk-actions">
             <button class="btn btn-ghost btn-sm" @click="refresh"><Icon name="refresh" :size="16" />Actualiser</button>
-            <button class="btn btn-danger btn-md" :disabled="!store.j0Active.length" @click="modal = true">
+            <button class="btn btn-dark btn-md" :disabled="!store.perteActive.length" @click="modal = 'perte'">
+              <Icon name="upload" :size="18" />Envoyer les pertes au rebut{{ store.perteActive.length ? ` (${store.perteActive.length})` : '' }}
+            </button>
+            <button class="btn btn-danger btn-md" :disabled="!store.j0Active.length" @click="modal = 'dlc'">
               <Icon name="upload" :size="18" />Envoyer les J-0 au rebut{{ store.j0Active.length ? ` (${store.j0Active.length})` : '' }}
             </button>
           </div>
@@ -178,11 +188,26 @@ onUnmounted(() => {
             </div>
             <ReleveTable :lines="g.lines" @qty="setQty" @delete="del" />
           </div>
+          <div v-if="perteLines.length">
+            <div class="dk-group-head">
+              <span class="pill perte">
+                <span style="width:7px;height:7px;border-radius:50%;background:currentColor" />Pertes
+              </span>
+              <span class="line" />
+            </div>
+            <ReleveTable :lines="perteLines" @qty="setQty" @delete="del" />
+          </div>
         </template>
       </div>
     </div>
 
-    <RebutModal v-if="modal" :lines="store.j0Active" @close="modal = false" @confirm="confirmRebut" />
+    <RebutModal
+      v-if="modal"
+      :kind="modal"
+      :lines="modal === 'perte' ? store.perteActive : store.j0Active"
+      @close="modal = null"
+      @confirm="confirmRebut"
+    />
     <div v-if="toastMsg" class="toast"><Icon name="checkCircle" :size="18" />{{ toastMsg }}</div>
   </div>
 </template>

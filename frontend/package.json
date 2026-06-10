@@ -4,9 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "prebuild": "npm run api:gen",
-    "build": "vue-tsc -b && vite build",
+    "dev": "npm run api:gen && vite",
+    "build": "npm run api:gen && vue-tsc -b && vite build",
     "preview": "vite preview",
     "api:gen": "orval --config ./orval.config.ts"
   },

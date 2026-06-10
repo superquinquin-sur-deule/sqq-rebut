@@ -16,6 +16,7 @@ import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockOdooResource.class)
@@ -75,6 +76,66 @@ class ReleveResourceTest {
                 .body("urgency", is("j1"));
         given().when().delete("/api/releve/lines/" + id)
                 .then().statusCode(204);
+    }
+
+    @Test
+    void addPerteLineUsesMotifLabelAndNoUrgency() {
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 8, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("type", is("PERTE"))
+                .body("motifLabel", is("Casse"))
+                .body("urgency", nullValue())
+                .body("dlc", nullValue())
+                .body("qty", is(2));
+    }
+
+    @Test
+    void addPerteMergesSameProductSameMotif() {
+        int id1 = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 11, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 11, "qty", 3))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(5));
+    }
+
+    @Test
+    void addPerteWithoutMotifReturns400() {
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE", "qty", 1))
+                .when().post("/api/releve/lines")
+                .then().statusCode(400);
+    }
+
+    @Test
+    void rebutPerteScrapsWithChosenMotifOrigin() {
+        int id = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 9, "qty", 1))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        given().contentType(JSON).body(Map.of("lineIds", java.util.List.of(id)))
+                .when().post("/api/releve/rebut")
+                .then().statusCode(200)
+                .body("created", greaterThanOrEqualTo(1))
+                .body("lines[0].sent", is(true));
+
+        // le scrap part avec l'origine = le motif choisi (9), pas la config DLC (7)
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"scrap_origin_id\":9")));
     }
 
     @Test

@@ -1842,3 +1842,207 @@ input, select {
     text-transform: uppercase;
     box-shadow: var(--shadow-md);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Mode « Pertes » : menu d'accueil scannette, sélection motif,
+   et rendu des lignes de perte (scannette + poste).
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Menu de choix DLC / Pertes (scannette) ── */
+.mode-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    gap: clamp(18px, 5cqh, 30px);
+    padding: clamp(18px, 5cqh, 30px) clamp(14px, 5cqw, 22px);
+}
+
+.mode-intro {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(15px, 4.4cqw, 18px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sqq-brown);
+    text-align: center;
+    margin: 0;
+}
+
+.mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-height: clamp(120px, 26cqh, 160px);
+    padding: 22px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--sqq-line);
+    background: #fff;
+    text-align: center;
+    transition: border-color 0.14s, background 0.14s, transform 0.1s, box-shadow 0.14s;
+}
+
+.mode-btn:active {
+    transform: scale(0.98);
+}
+
+.mode-ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+}
+
+.mode-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(20px, 6cqw, 26px);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mode-sub {
+    font-size: 12.5px;
+    color: var(--sqq-brown-soft);
+    font-weight: 600;
+}
+
+.mode-btn.dlc {
+    border-color: var(--sqq-yellow-deep);
+    background: rgba(241, 220, 67, 0.12);
+}
+.mode-btn.dlc .mode-ic {
+    background: var(--sqq-yellow);
+    color: var(--sqq-brown);
+}
+.mode-btn.dlc .mode-title {
+    color: var(--sqq-brown);
+}
+
+.mode-btn.perte {
+    border-color: var(--sqq-teal);
+    background: rgba(0, 116, 127, 0.07);
+}
+.mode-btn.perte .mode-ic {
+    background: var(--sqq-teal);
+    color: #fff;
+}
+.mode-btn.perte .mode-title {
+    color: var(--sqq-teal);
+}
+
+/* ── Barre de mode (retour au menu) ── */
+.sc-modebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px clamp(12px, 4cqw, 16px);
+    background: var(--sqq-cream);
+    border-bottom: 1px solid var(--sqq-line);
+    flex-shrink: 0;
+}
+
+.sc-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--sqq-line);
+    background: #fff;
+    color: var(--sqq-brown);
+    flex-shrink: 0;
+    transition: background 0.12s, transform 0.1s;
+}
+.sc-back:active {
+    transform: scale(0.94);
+}
+
+.sc-mode-label {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sqq-brown);
+}
+.sc-mode-label.perte {
+    color: var(--sqq-teal);
+}
+
+/* ── Sélection du motif de rupture (scannette) ── */
+.motif-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.motif-opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 54px;
+    padding: 14px 16px;
+    border: 2px solid var(--sqq-line);
+    border-radius: 14px;
+    background: #fff;
+    text-align: left;
+    transition: border-color 0.14s, background 0.14s, transform 0.1s, box-shadow 0.14s;
+}
+.motif-opt:active {
+    transform: scale(0.98);
+}
+.motif-opt.is-on {
+    border-color: var(--sqq-teal);
+    background: rgba(0, 116, 127, 0.07);
+    box-shadow: 0 0 0 3px rgba(0, 116, 127, 0.16);
+    color: var(--sqq-teal);
+}
+
+.motif-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+}
+
+.motif-empty {
+    color: var(--sqq-mute);
+    font-size: 13px;
+    text-align: center;
+    padding: 16px 0;
+}
+
+/* ── Puce/pastille « perte » (teal) — session list, modal, table, groupe poste ── */
+.urgdot.perte {
+    background: var(--sqq-teal);
+}
+.urgdot.j0 {
+    background: var(--sqq-terracotta);
+}
+
+.td-urg.perte {
+    color: var(--sqq-teal);
+}
+.td-urg.perte .dot {
+    background: var(--sqq-teal);
+}
+
+.dk-group-head .pill.perte {
+    background: var(--sqq-teal);
+    color: #fff;
+}

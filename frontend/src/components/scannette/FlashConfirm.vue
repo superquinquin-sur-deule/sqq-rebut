@@ -2,7 +2,8 @@
 import Icon from '../Icon.vue';
 import { URG, type Urgency } from '../../lib/dates';
 
-defineProps<{ name: string; qty: number; urg: Urgency }>();
+const props = defineProps<{ name: string; qty: number; urg?: Urgency; motifLabel?: string }>();
+const tag = props.urg ? URG[props.urg].tag : (props.motifLabel ?? '');
 </script>
 
 <template>
@@ -11,7 +12,7 @@ defineProps<{ name: string; qty: number; urg: Urgency }>();
     <h2>Ligne ajoutée</h2>
     <div class="det">
       <div class="nm">{{ name }}</div>
-      <div class="qd">{{ URG[urg].tag }} · ×{{ qty }} pièce{{ qty > 1 ? 's' : '' }}</div>
+      <div class="qd">{{ tag }} · ×{{ qty }} pièce{{ qty > 1 ? 's' : '' }}</div>
     </div>
   </div>
 </template>

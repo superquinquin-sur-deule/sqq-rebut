@@ -55,7 +55,8 @@ public class ReleveResource {
 
     @POST
     @Path("/rebut")
-    @Operation(operationId = "sendRebut", summary = "Envoyer les lignes J-0 au rebut (stock.scrap Odoo)")
+    @Operation(operationId = "sendRebut",
+            summary = "Envoyer des lignes au rebut (stock.scrap Odoo) — DLC J-0 et/ou pertes selon les ids")
     public RebutResult rebut(RebutRequest req) {
         return service.sendRebut(req != null ? req.lineIds() : null);
     }

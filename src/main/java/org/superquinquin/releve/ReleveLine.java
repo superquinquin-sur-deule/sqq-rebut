@@ -3,6 +3,8 @@ package org.superquinquin.releve;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -34,8 +36,17 @@ public class ReleveLine extends PanacheEntity {
     @Column(name = "uom_id")
     public Long uomId;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    public LineType type = LineType.DLC;
+
     public LocalDate dlc;
+
+    @Column(name = "motif_id")
+    public Long motifId;
+
+    @Column(name = "motif_label")
+    public String motifLabel;
 
     @Column(nullable = false)
     public int qty;

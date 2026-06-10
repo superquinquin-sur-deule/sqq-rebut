@@ -6,6 +6,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import org.superquinquin.motif.Motif;
+import org.superquinquin.motif.MotifService;
 import org.superquinquin.odoo.OdooClient;
 import org.superquinquin.odoo.OdooConfig;
 import org.superquinquin.product.Product;
@@ -22,6 +24,9 @@ public class ReleveService {
 
     @Inject
     ProductService products;
+
+    @Inject
+    MotifService motifs;
 
     @Inject
     OdooClient odoo;
@@ -62,21 +67,34 @@ public class ReleveService {
         if (req == null || req.barcode() == null || req.barcode().isBlank()) {
             throw new BadRequestException("Code-barres manquant");
         }
-        if (req.dlc() == null) {
-            throw new BadRequestException("DLC manquante");
-        }
         if (req.qty() < 1) {
             throw new BadRequestException("Quantité invalide");
         }
+        LineType type = parseType(req.type());
+        Motif motif = null;
+        if (type == LineType.DLC) {
+            if (req.dlc() == null) {
+                throw new BadRequestException("DLC manquante");
+            }
+        } else {
+            if (req.motifId() == null) {
+                throw new BadRequestException("Motif manquant");
+            }
+            motif = motifs.byId(req.motifId())
+                    .orElseThrow(() -> new BadRequestException("Motif inconnu: " + req.motifId()));
+        }
+
         Product p = products.findByBarcode(req.barcode())
                 .orElseThrow(() -> new NotFoundException("Produit inconnu pour le code-barres " + req.barcode()));
 
         Releve releve = getOrCreate(LocalDate.now());
         String barcode = p.barcode() != null ? p.barcode() : req.barcode();
 
-        ReleveLine existing = ReleveLine.find(
-                "releve = ?1 and barcode = ?2 and dlc = ?3 and sent = false",
-                releve, barcode, req.dlc()).firstResult();
+        ReleveLine existing = type == LineType.DLC
+                ? ReleveLine.find("releve = ?1 and barcode = ?2 and type = ?3 and dlc = ?4 and sent = false",
+                        releve, barcode, LineType.DLC, req.dlc()).firstResult()
+                : ReleveLine.find("releve = ?1 and barcode = ?2 and type = ?3 and motifId = ?4 and sent = false",
+                        releve, barcode, LineType.PERTE, req.motifId()).firstResult();
         if (existing != null) {
             existing.qty += req.qty();
             return ReleveLineDto.from(existing, LocalDate.now());
@@ -90,11 +108,28 @@ public class ReleveService {
         l.rayon = p.rayon();
         l.uom = p.uom();
         l.uomId = p.uomId();
-        l.dlc = req.dlc();
+        l.type = type;
+        if (type == LineType.DLC) {
+            l.dlc = req.dlc();
+        } else {
+            l.motifId = motif.id();
+            l.motifLabel = motif.label();
+        }
         l.qty = req.qty();
         l.sent = false;
         l.persist();
         return ReleveLineDto.from(l, LocalDate.now());
+    }
+
+    private static LineType parseType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return LineType.DLC;
+        }
+        try {
+            return LineType.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Type de ligne invalide: " + raw);
+        }
     }
 
     @Transactional
@@ -126,7 +161,7 @@ public class ReleveService {
                 ? ReleveLine.list("id in ?1", ids)
                 : ReleveLine.list("releve.date", today);
         List<ReleveLine> targets = candidates.stream()
-                .filter(l -> !l.sent && Urgency.of(l.dlc, today) == Urgency.J0)
+                .filter(l -> !l.sent && (l.type == LineType.PERTE || Urgency.of(l.dlc, today) == Urgency.J0))
                 .toList();
 
         boolean dryRun = config.rebut().dryRun();
@@ -135,7 +170,7 @@ public class ReleveService {
         for (ReleveLine l : targets) {
             if (dryRun) {
                 Log.infof("[REBUT DRY-RUN] stock.scrap product_id=%s scrap_qty=%d uom=%s scrap_origin_id=%d",
-                        l.productId, l.qty, l.uom, config.scrap().originId());
+                        l.productId, l.qty, l.uom, scrapOriginId(l));
                 l.scrapRef = "DRY-RUN";
             } else {
                 int scrapId = odoo.create("stock.scrap", scrapValues(l));
@@ -160,8 +195,16 @@ public class ReleveService {
         values.put("scrap_qty", (double) l.qty);
         values.put("location_id", config.scrap().locationId());
         values.put("scrap_location_id", config.scrap().scrapLocationId());
-        values.put("scrap_origin_id", config.scrap().originId());
+        values.put("scrap_origin_id", scrapOriginId(l));
         return values;
+    }
+
+    /** Origine du scrap : le motif choisi pour une perte, sinon « DLC Dépassée » (config) pour une DLC. */
+    private long scrapOriginId(ReleveLine l) {
+        if (l.type == LineType.PERTE && l.motifId != null) {
+            return l.motifId;
+        }
+        return config.scrap().originId();
     }
 
     @Transactional

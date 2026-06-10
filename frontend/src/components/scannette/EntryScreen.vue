@@ -1,14 +1,23 @@
+<script lang="ts">
+import type { Urgency } from '../../lib/dates';
+
+export type ValidatePayload =
+  | { type: 'DLC'; dlc: string; qty: number; urg: Urgency }
+  | { type: 'PERTE'; motifId: number; motifLabel: string; qty: number };
+</script>
+
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import Icon from '../Icon.vue';
 import DlcGrid from './DlcGrid.vue';
+import MotifGrid from './MotifGrid.vue';
 import QtyStepper from './QtyStepper.vue';
-import { URG, fmtShort, fmtISO, parseISO, urgFromDate, today, type Urgency } from '../../lib/dates';
-import type { Product } from '../../api';
+import { URG, fmtShort, fmtISO, parseISO, urgFromDate, today } from '../../lib/dates';
+import type { Motif, Product } from '../../api';
 
-const props = defineProps<{ product: Product }>();
+const props = defineProps<{ product: Product; mode: 'dlc' | 'perte'; motifs?: Motif[] }>();
 const emit = defineEmits<{
-  (e: 'validate', payload: { dlc: string; qty: number; urg: Urgency }): void;
+  (e: 'validate', payload: ValidatePayload): void;
   (e: 'cancel'): void;
 }>();
 
@@ -17,6 +26,8 @@ const quantity = ref(1);
 const exactDate = ref('');
 const showDate = ref(false);
 const minDate = fmtISO(today());
+
+const motifId = ref<number | null>(null);
 
 function pickUrg(k: Urgency) {
   urgency.value = k;
@@ -32,9 +43,19 @@ function onExact(e: Event) {
 
 const dlcForLine = computed(() => exactDate.value || (urgency.value ? fmtISO(URG[urgency.value].date()) : null));
 
+const canValidate = computed(() =>
+  props.mode === 'dlc' ? !!urgency.value && !!dlcForLine.value : motifId.value != null,
+);
+
 function validate() {
-  if (!urgency.value || !dlcForLine.value) return;
-  emit('validate', { dlc: dlcForLine.value, qty: quantity.value, urg: urgency.value });
+  if (!canValidate.value) return;
+  if (props.mode === 'dlc') {
+    emit('validate', { type: 'DLC', dlc: dlcForLine.value!, qty: quantity.value, urg: urgency.value! });
+  } else {
+    const m = (props.motifs ?? []).find((x) => x.id === motifId.value);
+    if (!m) return;
+    emit('validate', { type: 'PERTE', motifId: m.id, motifLabel: m.label, qty: quantity.value });
+  }
 }
 </script>
 
@@ -52,7 +73,7 @@ function validate() {
         </div>
       </div>
 
-      <div>
+      <div v-if="props.mode === 'dlc'">
         <div class="field-label"><span>Date limite de consommation</span></div>
         <DlcGrid :value="urgency" @select="pickUrg" />
         <div class="exact-date">
@@ -72,6 +93,11 @@ function validate() {
         </div>
       </div>
 
+      <div v-else>
+        <div class="field-label"><span>Motif de rupture</span></div>
+        <MotifGrid :motifs="props.motifs ?? []" :value="motifId" @select="motifId = $event" />
+      </div>
+
       <div>
         <div class="field-label"><span>Quantité concernée</span></div>
         <QtyStepper :qty="quantity" @update="quantity = $event" />
@@ -80,7 +106,7 @@ function validate() {
 
     <div class="entry-foot">
       <button class="btn btn-ghost btn-md" @click="emit('cancel')"><Icon name="x" :size="18" />Annuler</button>
-      <button class="btn btn-primary btn-md btn-block" :disabled="!urgency" @click="validate">
+      <button class="btn btn-primary btn-md btn-block" :disabled="!canValidate" @click="validate">
         <Icon name="check" :size="18" />Valider la ligne
       </button>
     </div>

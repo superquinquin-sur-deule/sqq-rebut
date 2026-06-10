@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia';
-import { api, type Product, type RebutResult, type ReleveLineDto } from '../api';
+import { api, type Motif, type NewLineRequest, type Product, type RebutResult, type ReleveLineDto } from '../api';
 
 interface State {
   lines: ReleveLineDto[];
   date: string;
   /** Relevé courant : null = celui du jour (scannette), sinon un relevé précis (poste). */
   releveId: number | null;
+  /** Motifs de rupture (Odoo), chargés une fois puis gardés en cache côté front. */
+  motifs: Motif[];
   loading: boolean;
   error: string | null;
 }
@@ -16,6 +18,7 @@ export const useReleveStore = defineStore('releve', {
     lines: [],
     date: '',
     releveId: null,
+    motifs: [],
     loading: false,
     error: null,
   }),
@@ -29,6 +32,7 @@ export const useReleveStore = defineStore('releve', {
     }),
     rayons: (s) => [...new Set(s.lines.map((l) => l.rayon).filter(Boolean))] as string[],
     j0Active: (s) => s.lines.filter((l) => l.urgency === 'j0' && !l.sent),
+    perteActive: (s) => s.lines.filter((l) => l.type === 'PERTE' && !l.sent),
   },
 
   actions: {
@@ -59,12 +63,18 @@ export const useReleveStore = defineStore('releve', {
       await this.fetch();
     },
 
+    /** Charge les motifs de rupture une seule fois (cache front). */
+    async fetchMotifs() {
+      if (this.motifs.length) return;
+      this.motifs = await api.getMotifs();
+    },
+
     async lookup(barcode: string): Promise<Product> {
       return api.getProductByBarcode(barcode);
     },
 
-    async addLine(barcode: string, dlc: string, qty: number): Promise<ReleveLineDto> {
-      const line = await api.addLine({ barcode, dlc, qty });
+    async addLine(req: NewLineRequest): Promise<ReleveLineDto> {
+      const line = await api.addLine(req);
       await this.fetch();
       return line;
     },

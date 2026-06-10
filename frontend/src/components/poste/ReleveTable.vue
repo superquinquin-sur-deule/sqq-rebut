@@ -18,7 +18,7 @@ const emit = defineEmits<{
 const cols = [
   { id: 'name', label: 'Produit' },
   { id: 'rayon', label: 'Rayon' },
-  { id: 'urg', label: 'DLC' },
+  { id: 'urg', label: 'DLC / Motif' },
   { id: 'qty', label: 'Quantité' },
 ];
 const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ? '▲' : '▼') : '↕');
@@ -40,7 +40,7 @@ const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ?
         <th style="text-align:right">Action</th>
       </tr>
       <tr v-else>
-        <th>Produit</th><th>Rayon</th><th>DLC</th><th>Quantité</th><th style="text-align:right">Action</th>
+        <th>Produit</th><th>Rayon</th><th>DLC / Motif</th><th>Quantité</th><th style="text-align:right">Action</th>
       </tr>
     </thead>
     <tbody>
@@ -51,8 +51,11 @@ const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ?
         </td>
         <td><span class="td-rayon">{{ l.rayon }}</span></td>
         <td>
-          <span class="td-urg" :class="l.urgency"><span class="dot" />{{ URG[l.urgency as Urgency].tag }}</span>
-          <div class="td-urg date" style="margin-top:3px">{{ fmtShort(parseISO(l.dlc)) }}</div>
+          <span v-if="l.type === 'PERTE'" class="td-urg perte"><span class="dot" />{{ l.motifLabel }}</span>
+          <template v-else>
+            <span class="td-urg" :class="l.urgency"><span class="dot" />{{ URG[l.urgency as Urgency].tag }}</span>
+            <div class="td-urg date" style="margin-top:3px">{{ fmtShort(parseISO(l.dlc as string)) }}</div>
+          </template>
         </td>
         <td>
           <b v-if="l.sent" style="font-family:var(--font-display);font-size:15px">×{{ l.qty }}</b>
