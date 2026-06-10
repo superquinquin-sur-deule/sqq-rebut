@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import { api } from './api';
 
-// Bannière « staging » : visible quand le backend a SQQ_DLC_STAGING=true.
 const staging = ref(false);
 
 onMounted(async () => {

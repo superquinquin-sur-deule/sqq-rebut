@@ -20,6 +20,6 @@ class MotifResourceTest {
                 .then().statusCode(200)
                 .body("size()", is(3))
                 .body("label", hasItem("Casse"))
-                .body("id", not(hasItem(7)));   // « DLC Dépassée » exclue
+                .body("id", not(hasItem(7)));
     }
 }
