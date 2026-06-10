@@ -33,8 +33,8 @@ components:
         dlc:
           $ref: "#/components/schemas/LocalDate"
         qty:
-          type: integer
-          format: int32
+          type: number
+          format: double
         type:
           type: string
         motifId:
@@ -49,6 +49,7 @@ components:
       - uomId
       - price
       - qtyAvailable
+      - soldByWeight
       type: object
       properties:
         id:
@@ -71,6 +72,12 @@ components:
         qtyAvailable:
           type: number
           format: double
+        soldByWeight:
+          type: boolean
+        scannedWeight:
+          type: number
+          format: double
+          description: "Poids (kg) extrait d'un code-barres balance, à pré-remplir"
     RebutRequest:
       type: object
       properties:
@@ -143,8 +150,8 @@ components:
         motifLabel:
           type: string
         qty:
-          type: integer
-          format: int32
+          type: number
+          format: double
         sent:
           type: boolean
         scrapRef:
@@ -168,8 +175,8 @@ components:
       type: object
       properties:
         qty:
-          type: integer
-          format: int32
+          type: number
+          format: double
 tags:
 - name: Configuration
 - name: Motifs

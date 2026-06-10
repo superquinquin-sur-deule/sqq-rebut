@@ -67,7 +67,7 @@ public class ReleveService {
         if (req == null || req.barcode() == null || req.barcode().isBlank()) {
             throw new BadRequestException("Code-barres manquant");
         }
-        if (req.qty() < 1) {
+        if (!Double.isFinite(req.qty()) || req.qty() <= 0) {
             throw new BadRequestException("Quantité invalide");
         }
         LineType type = parseType(req.type());
@@ -96,7 +96,7 @@ public class ReleveService {
                 : ReleveLine.find("releve = ?1 and barcode = ?2 and type = ?3 and motifId = ?4 and sent = false",
                         releve, barcode, LineType.PERTE, req.motifId()).firstResult();
         if (existing != null) {
-            existing.qty += req.qty();
+            existing.qty = round3(existing.qty + req.qty());
             return ReleveLineDto.from(existing, LocalDate.now());
         }
 
@@ -115,7 +115,7 @@ public class ReleveService {
             l.motifId = motif.id();
             l.motifLabel = motif.label();
         }
-        l.qty = req.qty();
+        l.qty = round3(req.qty());
         l.sent = false;
         l.persist();
         return ReleveLineDto.from(l, LocalDate.now());
@@ -133,16 +133,21 @@ public class ReleveService {
     }
 
     @Transactional
-    public ReleveLineDto updateQty(Long id, int qty) {
-        if (qty < 1) {
+    public ReleveLineDto updateQty(Long id, double qty) {
+        if (!Double.isFinite(qty) || qty <= 0) {
             throw new BadRequestException("Quantité invalide");
         }
         ReleveLine l = ReleveLine.findById(id);
         if (l == null) {
             throw new NotFoundException("Ligne introuvable: " + id);
         }
-        l.qty = qty;
+        l.qty = round3(qty);
         return ReleveLineDto.from(l, LocalDate.now());
+    }
+
+    /** Arrondi au gramme : évite les artefacts binaires en cumulant des poids (1.234 + 0.5). */
+    private static double round3(double qty) {
+        return Math.round(qty * 1000) / 1000.0;
     }
 
     @Transactional
@@ -169,14 +174,14 @@ public class ReleveService {
         int created = 0;
         for (ReleveLine l : targets) {
             if (dryRun) {
-                Log.infof("[REBUT DRY-RUN] stock.scrap product_id=%s scrap_qty=%d uom=%s scrap_origin_id=%d",
+                Log.infof("[REBUT DRY-RUN] stock.scrap product_id=%s scrap_qty=%s uom=%s scrap_origin_id=%d",
                         l.productId, l.qty, l.uom, scrapOriginId(l));
                 l.scrapRef = "DRY-RUN";
             } else {
                 int scrapId = odoo.create("stock.scrap", scrapValues(l));
                 odoo.callButton("stock.scrap", List.of(scrapId), "action_validate");
                 l.scrapRef = String.valueOf(scrapId);
-                Log.infof("[REBUT] stock.scrap #%d validé pour %s (x%d)", scrapId, l.name, l.qty);
+                Log.infof("[REBUT] stock.scrap #%d validé pour %s (x%s)", scrapId, l.name, l.qty);
             }
             l.sent = true;
             created++;
@@ -192,7 +197,7 @@ public class ReleveService {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("product_id", l.productId);
         values.put("product_uom_id", l.uomId);
-        values.put("scrap_qty", (double) l.qty);
+        values.put("scrap_qty", l.qty);
         values.put("location_id", config.scrap().locationId());
         values.put("scrap_location_id", config.scrap().scrapLocationId());
         values.put("scrap_origin_id", scrapOriginId(l));

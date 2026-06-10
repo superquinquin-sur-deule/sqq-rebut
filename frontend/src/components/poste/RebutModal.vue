@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Icon from '../Icon.vue';
+import { fmtQty, isWeightUom, round3 } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = withDefaults(defineProps<{ lines: ReleveLineDto[]; kind?: 'dlc' | 'perte' }>(), {
@@ -8,7 +9,14 @@ const props = withDefaults(defineProps<{ lines: ReleveLineDto[]; kind?: 'dlc' | 
 });
 const emit = defineEmits<{ (e: 'confirm'): void; (e: 'close'): void }>();
 
-const total = computed(() => props.lines.reduce((s, l) => s + l.qty, 0));
+const pieces = computed(() => props.lines.filter((l) => !isWeightUom(l.uom)).reduce((s, l) => s + l.qty, 0));
+const kilos = computed(() => props.lines.filter((l) => isWeightUom(l.uom)).reduce((s, l) => s + l.qty, 0));
+const totalLabel = computed(() => {
+  const parts: string[] = [];
+  if (pieces.value > 0) parts.push(`${pieces.value} pièce${pieces.value > 1 ? 's' : ''}`);
+  if (kilos.value > 0) parts.push(fmtQty(round3(kilos.value), 'kg'));
+  return parts.join(' · ') || '0 pièce';
+});
 const isPerte = computed(() => props.kind === 'perte');
 </script>
 
@@ -33,11 +41,11 @@ const isPerte = computed(() => props.kind === 'perte');
           <div class="nm">
             {{ l.name }}<small>{{ l.rayon }} · {{ isPerte ? l.motifLabel : l.barcode }}</small>
           </div>
-          <span class="qd">×{{ l.qty }}</span>
+          <span class="qd">{{ fmtQty(l.qty, l.uom) }}</span>
         </div>
         <div class="recap-total">
           <span>Total au rebut</span>
-          <b>{{ total }} pièce{{ total > 1 ? 's' : '' }}</b>
+          <b>{{ totalLabel }}</b>
         </div>
         <div class="odoo-note">
           <Icon name="box" :size="18" style="flex-shrink:0;color:var(--sqq-teal)" />

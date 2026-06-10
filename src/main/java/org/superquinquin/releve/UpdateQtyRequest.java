@@ -1,4 +1,4 @@
 package org.superquinquin.releve;
 
-public record UpdateQtyRequest(int qty) {
+public record UpdateQtyRequest(double qty) {
 }

@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import Icon from '../Icon.vue';
 import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
+import { fmtQty } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{ lines: ReleveLineDto[] }>();
@@ -24,7 +25,7 @@ const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.i
         <span v-if="l.type === 'PERTE'">{{ l.motifLabel }} · {{ l.rayon }}</span>
         <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
       </div>
-      <span class="q">×{{ l.qty }}</span>
+      <span class="q">{{ fmtQty(l.qty, l.uom) }}</span>
     </div>
   </div>
 </template>

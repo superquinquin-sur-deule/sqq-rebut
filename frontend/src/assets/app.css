@@ -887,6 +887,27 @@ input, select {
     margin-top: 3px;
 }
 
+.qty.weight .val input {
+    width: 100%;
+    text-align: center;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(24px, 7.5cqw, 30px);
+    line-height: 1;
+    color: var(--sqq-brown);
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.qty.weight .val input::-webkit-outer-spin-button,
+.qty.weight .val input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .qty-chips {
     display: flex;
     gap: 7px;
@@ -1557,6 +1578,31 @@ input, select {
     font-family: var(--font-display), serif;
     font-weight: 800;
     font-size: 15px;
+}
+
+/* édition du poids (kg) au poste */
+.dk-weight {
+    padding: 0 8px;
+    gap: 4px;
+}
+
+.dk-weight input {
+    width: 64px;
+    height: 30px;
+    border: none;
+    outline: none;
+    background: transparent;
+    text-align: right;
+    font-family: var(--font-display), serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--sqq-brown);
+}
+
+.dk-weight span {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sqq-brown-soft);
 }
 
 .td-actions {

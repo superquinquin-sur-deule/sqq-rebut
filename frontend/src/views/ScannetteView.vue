@@ -19,7 +19,7 @@ const phase = ref<'ready' | 'entry' | 'flash'>('ready');
 const product = ref<Product | null>(null);
 const scanError = ref<string | null>(null);
 const busy = ref(false);
-const flashData = ref<{ name: string; qty: number; urg?: Urgency; motifLabel?: string } | null>(null);
+const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; motifLabel?: string } | null>(null);
 
 let flashTimer: number | undefined;
 let poll: number | undefined;
@@ -58,6 +58,7 @@ async function onValidate(payload: ValidatePayload) {
   if (!product.value) return;
   const name = product.value.name ?? '';
   const barcode = product.value.barcode ?? '';
+  const uom = product.value.uom;
   try {
     if (payload.type === 'DLC') {
       await store.addLine({ barcode, dlc: payload.dlc, qty: payload.qty, type: 'DLC' });
@@ -73,8 +74,8 @@ async function onValidate(payload: ValidatePayload) {
   beep();
   flashData.value =
     payload.type === 'DLC'
-      ? { name, qty: payload.qty, urg: payload.urg }
-      : { name, qty: payload.qty, motifLabel: payload.motifLabel };
+      ? { name, qty: payload.qty, uom, urg: payload.urg }
+      : { name, qty: payload.qty, uom, motifLabel: payload.motifLabel };
   phase.value = 'flash';
   window.clearTimeout(flashTimer);
   flashTimer = window.setTimeout(() => {
@@ -135,6 +136,7 @@ onUnmounted(() => {
           v-if="phase === 'flash' && flashData"
           :name="flashData.name"
           :qty="flashData.qty"
+          :uom="flashData.uom"
           :urg="flashData.urg"
           :motif-label="flashData.motifLabel"
         />

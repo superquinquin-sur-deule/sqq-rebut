@@ -12,7 +12,9 @@ import Icon from '../Icon.vue';
 import DlcGrid from './DlcGrid.vue';
 import MotifGrid from './MotifGrid.vue';
 import QtyStepper from './QtyStepper.vue';
+import WeightInput from './WeightInput.vue';
 import { URG, fmtShort, fmtISO, parseISO, urgFromDate, today } from '../../lib/dates';
+import { gToKg, kgToG } from '../../lib/qty';
 import type { Motif, Product } from '../../api';
 
 const props = defineProps<{ product: Product; mode: 'dlc' | 'perte'; motifs?: Motif[] }>();
@@ -23,6 +25,8 @@ const emit = defineEmits<{
 
 const urgency = ref<Urgency | null>(null);
 const quantity = ref(1);
+const byWeight = computed(() => props.product.soldByWeight);
+const grams = ref<number | null>(props.product.scannedWeight != null ? kgToG(props.product.scannedWeight) : null);
 const exactDate = ref('');
 const showDate = ref(false);
 const minDate = fmtISO(today());
@@ -43,18 +47,23 @@ function onExact(e: Event) {
 
 const dlcForLine = computed(() => exactDate.value || (urgency.value ? fmtISO(URG[urgency.value].date()) : null));
 
-const canValidate = computed(() =>
-  props.mode === 'dlc' ? !!urgency.value && !!dlcForLine.value : motifId.value != null,
+const qtyForLine = computed(() => (byWeight.value ? (grams.value != null ? gToKg(grams.value) : null) : quantity.value));
+
+const canValidate = computed(
+  () =>
+    qtyForLine.value != null &&
+    qtyForLine.value > 0 &&
+    (props.mode === 'dlc' ? !!urgency.value && !!dlcForLine.value : motifId.value != null),
 );
 
 function validate() {
   if (!canValidate.value) return;
   if (props.mode === 'dlc') {
-    emit('validate', { type: 'DLC', dlc: dlcForLine.value!, qty: quantity.value, urg: urgency.value! });
+    emit('validate', { type: 'DLC', dlc: dlcForLine.value!, qty: qtyForLine.value!, urg: urgency.value! });
   } else {
     const m = (props.motifs ?? []).find((x) => x.id === motifId.value);
     if (!m) return;
-    emit('validate', { type: 'PERTE', motifId: m.id, motifLabel: m.label, qty: quantity.value });
+    emit('validate', { type: 'PERTE', motifId: m.id, motifLabel: m.label, qty: qtyForLine.value! });
   }
 }
 </script>
@@ -98,7 +107,11 @@ function validate() {
         <MotifGrid :motifs="props.motifs ?? []" :value="motifId" @select="motifId = $event" />
       </div>
 
-      <div>
+      <div v-if="byWeight">
+        <div class="field-label"><span>Poids concerné</span></div>
+        <WeightInput :grams="grams" @update="grams = $event" />
+      </div>
+      <div v-else>
         <div class="field-label"><span>Quantité concernée</span></div>
         <QtyStepper :qty="quantity" @update="quantity = $event" />
       </div>

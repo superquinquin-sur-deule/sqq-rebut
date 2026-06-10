@@ -49,7 +49,7 @@ public class ReleveLine extends PanacheEntity {
     public String motifLabel;
 
     @Column(nullable = false)
-    public int qty;
+    public double qty;
 
     @Column(nullable = false)
     public boolean sent;

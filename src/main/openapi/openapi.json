@@ -39,8 +39,8 @@
             "$ref" : "#/components/schemas/LocalDate"
           },
           "qty" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "type" : {
             "type" : "string"
@@ -52,7 +52,7 @@
         }
       },
       "Product" : {
-        "required" : [ "id", "barcode", "name", "uom", "uomId", "price", "qtyAvailable" ],
+        "required" : [ "id", "barcode", "name", "uom", "uomId", "price", "qtyAvailable", "soldByWeight" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -82,6 +82,14 @@
           "qtyAvailable" : {
             "type" : "number",
             "format" : "double"
+          },
+          "soldByWeight" : {
+            "type" : "boolean"
+          },
+          "scannedWeight" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "Poids (kg) extrait d'un code-barres balance, à pré-remplir"
           }
         }
       },
@@ -172,8 +180,8 @@
             "type" : "string"
           },
           "qty" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           },
           "sent" : {
             "type" : "boolean"
@@ -204,8 +212,8 @@
         "type" : "object",
         "properties" : {
           "qty" : {
-            "type" : "integer",
-            "format" : "int32"
+            "type" : "number",
+            "format" : "double"
           }
         }
       }

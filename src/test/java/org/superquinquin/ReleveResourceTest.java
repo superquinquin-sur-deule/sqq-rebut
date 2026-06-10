@@ -41,7 +41,7 @@ class ReleveResourceTest {
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
                 .body("urgency", is("j2"))
-                .body("qty", is(4))
+                .body("qty", is(4.0f))
                 .body("name", is("FERME DU CRUSOBEAU Saucisse fine fromage"))
                 .body("uom", is("kg"));
     }
@@ -56,7 +56,7 @@ class ReleveResourceTest {
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
                 .body("id", is(id1))
-                .body("qty", is(7));
+                .body("qty", is(7.0f));
 
         given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
@@ -72,8 +72,15 @@ class ReleveResourceTest {
         given().contentType(JSON).body(Map.of("qty", 5))
                 .when().put("/api/releve/lines/" + id)
                 .then().statusCode(200)
-                .body("qty", is(5))
+                .body("qty", is(5.0f))
                 .body("urgency", is("j1"));
+        given().contentType(JSON).body(Map.of("qty", 0))
+                .when().put("/api/releve/lines/" + id)
+                .then().statusCode(400);
+        given().contentType(JSON).body(Map.of("qty", 0.5))
+                .when().put("/api/releve/lines/" + id)
+                .then().statusCode(200)
+                .body("qty", is(0.5f));
         given().when().delete("/api/releve/lines/" + id)
                 .then().statusCode(204);
     }
@@ -89,7 +96,7 @@ class ReleveResourceTest {
                 .body("motifLabel", is("Casse"))
                 .body("urgency", nullValue())
                 .body("dlc", nullValue())
-                .body("qty", is(2));
+                .body("qty", is(2.0f));
     }
 
     @Test
@@ -107,7 +114,30 @@ class ReleveResourceTest {
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
                 .body("id", is(id1))
-                .body("qty", is(5));
+                .body("qty", is(5.0f));
+    }
+
+    @Test
+    void addLineWithScaleBarcodeStoresWeightAndMerges() {
+        // scan balance → résolu vers le barcode de base, poids décimal
+        int id1 = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.SCALE_BARCODE,
+                        "dlc", LocalDate.now().plusDays(12).toString(), "qty", 1.234))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("barcode", is(WireMockOdooResource.KNOWN_BARCODE))
+                .body("uom", is("kg"))
+                .body("qty", is(1.234f))
+                .extract().path("id");
+
+        // second scan du même produit, autre poids, même DLC → fusion en sommant les kg
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "dlc", LocalDate.now().plusDays(12).toString(), "qty", 0.5))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(1.734f));
     }
 
     @Test
@@ -140,7 +170,11 @@ class ReleveResourceTest {
 
     @Test
     void rebutJ0CreatesAndValidatesScrapWithBasicAuth() {
-        addLine(LocalDate.now(), 3); // j0
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "dlc", LocalDate.now().toString(), "qty", 1.234)) // j0, poids décimal
+                .when().post("/api/releve/lines")
+                .then().statusCode(200);
 
         given().contentType(JSON).body("{}")
                 .when().post("/api/releve/rebut")
@@ -153,5 +187,7 @@ class ReleveResourceTest {
                 .withHeader("Authorization", containing("Basic")));
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("\"create\"")));
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"scrap_qty\":1.234")));
     }
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Icon from '../Icon.vue';
 import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
+import { fmtQty, isWeightUom, round3 } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{
@@ -22,6 +23,16 @@ const cols = [
   { id: 'qty', label: 'Quantité' },
 ];
 const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ? '▲' : '▼') : '↕');
+
+function onWeight(id: number, e: Event) {
+  const input = e.target as HTMLInputElement;
+  const v = parseFloat(input.value);
+  if (Number.isFinite(v) && v > 0) {
+    emit('qty', id, round3(v));
+  } else {
+    input.value = '';
+  }
+}
 </script>
 
 <template>
@@ -58,7 +69,11 @@ const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ?
           </template>
         </td>
         <td>
-          <b v-if="l.sent" style="font-family:var(--font-display);font-size:15px">×{{ l.qty }}</b>
+          <b v-if="l.sent" style="font-family:var(--font-display);font-size:15px">{{ fmtQty(l.qty, l.uom) }}</b>
+          <div v-else-if="isWeightUom(l.uom)" class="dk-qty dk-weight">
+            <input type="number" step="0.001" min="0.001" :value="l.qty" @change="onWeight(l.id!, $event)" />
+            <span>kg</span>
+          </div>
           <div v-else class="dk-qty">
             <button @click="emit('qty', l.id!, Math.max(1, l.qty - 1))"><Icon name="minus" :size="15" /></button>
             <b>{{ l.qty }}</b>

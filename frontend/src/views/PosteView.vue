@@ -35,9 +35,6 @@ const filtered = computed(() =>
   ),
 );
 
-const totalPieces = computed(() => store.lines.filter((l) => !l.sent).reduce((s, l) => s + l.qty, 0));
-const activeLines = computed(() => store.lines.filter((l) => !l.sent).length);
-
 const groups = computed(() =>
   (['j0', 'j1', 'j2'] as Urgency[])
     .map((k) => ({

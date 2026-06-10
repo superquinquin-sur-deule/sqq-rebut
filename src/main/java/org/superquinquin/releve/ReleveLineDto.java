@@ -16,7 +16,7 @@ public record ReleveLineDto(
         String urgency,
         Long motifId,
         String motifLabel,
-        int qty,
+        double qty,
         boolean sent,
         String scrapRef) {
 
