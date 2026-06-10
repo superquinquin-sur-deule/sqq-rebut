@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.9.0...v0.9.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* prevent unwanted scrolling in PWA ([0893614](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/0893614ba8b32751f8925f2b338912845c698f6b))
+
 ## [0.9.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.8.0...v0.9.0) (2026-06-10)
 
 
