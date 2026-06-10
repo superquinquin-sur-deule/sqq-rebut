@@ -1,5 +1,6 @@
 package org.superquinquin.releve;
 
+import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -36,6 +37,7 @@ public class ReleveResource {
     @Path("/lines")
     @Operation(operationId = "addLine", summary = "Ajouter une ligne scannée")
     public ReleveLineDto add(NewLineRequest req) {
+        Log.infof("Ajout d'une ligne scannée: barcode=%s, qty=%s, motifId=%s, type=%s", req.barcode(), req.qty(), req.motifId(), req.type());
         return service.addLine(req);
     }
 
@@ -43,6 +45,7 @@ public class ReleveResource {
     @Path("/lines/{id}")
     @Operation(operationId = "updateLine", summary = "Modifier une ligne (quantité et/ou motif)")
     public ReleveLineDto update(@PathParam("id") Long id, UpdateLineRequest req) {
+        Log.infof("Modification d'une ligne: id=%s, qty=%s, motifId=%s", id, req.qty(), req.motifId());
         return service.updateLine(id, req.qty(), req.motifId());
     }
 
@@ -50,6 +53,7 @@ public class ReleveResource {
     @Path("/lines/{id}")
     @Operation(operationId = "deleteLine", summary = "Supprimer une ligne")
     public void delete(@PathParam("id") Long id) {
+        Log.infof("Suppression d'une ligne: id=%s", id);
         service.delete(id);
     }
 
@@ -58,6 +62,7 @@ public class ReleveResource {
     @Operation(operationId = "sendRebut",
             summary = "Envoyer des lignes au rebut (stock.scrap Odoo) — DLC J-0 et/ou pertes selon les ids")
     public RebutResult rebut(RebutRequest req) {
+        Log.infof("Envoi de rebut: lineIds=%s", req != null ? req.lineIds() : "tous");
         return service.sendRebut(req != null ? req.lineIds() : null);
     }
 }

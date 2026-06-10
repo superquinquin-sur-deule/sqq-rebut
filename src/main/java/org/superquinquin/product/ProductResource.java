@@ -1,5 +1,6 @@
 package org.superquinquin.product;
 
+import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -22,6 +23,7 @@ public class ProductResource {
     @Path("/{barcode}")
     @Operation(operationId = "getProductByBarcode", summary = "Chercher un produit par code-barres (EAN)")
     public Product byBarcode(@PathParam("barcode") String barcode) {
+        Log.info("Recherche du produit par code-barres : " + barcode);
         return service.findByBarcode(barcode)
                 .orElseThrow(() -> new NotFoundException("Produit inconnu pour le code-barres " + barcode));
     }
