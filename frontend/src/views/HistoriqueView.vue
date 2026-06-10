@@ -25,7 +25,7 @@ onMounted(async () => {
   <div class="app-poste">
     <div class="poste-head">
       <img :src="logo" alt="SuperQuinquin" />
-      <div class="brand">SuperQuinquin<small>Relevé DLC</small></div>
+      <div class="brand">SuperQuinquin<small>Rebut</small></div>
       <nav class="poste-nav">
         <router-link class="nav-link" to="/releves"><Icon name="calendar" :size="16" />Relevé du jour</router-link>
         <router-link class="nav-link" :to="{ name: 'scannette' }"><Icon name="scan" :size="16" />Scannette</router-link>

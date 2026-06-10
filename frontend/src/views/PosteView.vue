@@ -120,7 +120,7 @@ onUnmounted(() => {
   <div class="app-poste">
     <div class="poste-head">
       <img :src="logo" alt="SuperQuinquin" />
-      <div class="brand">SuperQuinquin<small>Relevé DLC</small></div>
+      <div class="brand">SuperQuinquin<small>Rebut</small></div>
       <nav class="poste-nav">
         <router-link class="nav-link" :to="{ name: 'historique' }"><Icon name="clock" :size="16" />Historique</router-link>
         <router-link class="nav-link" :to="{ name: 'scannette' }"><Icon name="scan" :size="16" />Scannette</router-link>
