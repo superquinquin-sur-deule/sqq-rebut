@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/superquinquin-sur-deule/sqq-dlc/compare/v0.4.0...v0.5.0) (2026-06-10)
+
+
+### Features
+
+* add home screen to choose between dlc and pertes ([d23e48e](https://github.com/superquinquin-sur-deule/sqq-dlc/commit/d23e48ef107101f1c09f66d69380e12a8a687c5e))
+* support price to weight and weight uom ([5cdd124](https://github.com/superquinquin-sur-deule/sqq-dlc/commit/5cdd124f49cf849f83a2dd566c7be962bd83a957))
+
 ## [0.4.0](https://github.com/superquinquin-sur-deule/sqq-dlc/compare/v0.3.0...v0.4.0) (2026-06-09)
 
 
