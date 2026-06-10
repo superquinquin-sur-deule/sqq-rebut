@@ -1,6 +1,5 @@
-import { getRelevéDLCAPI } from './generated';
+import { getRebutAPI } from './generated';
 
-// Ré-exporte les types générés + une instance prête à l'emploi du client.
 export * from './generated';
 
-export const api = getRelevéDLCAPI();
+export const api = getRebutAPI();

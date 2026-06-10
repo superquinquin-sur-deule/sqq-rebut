@@ -371,10 +371,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReleveDto"
 info:
-  title: Relevé DLC API
+  title: Rebut API
   version: 1.0.0
-  description: API de relevé des DLC produits frais (SuperQuinquin) — lookup produit
-    Odoo + mise au rebut.
+  description: API de relevé des DLC et des Pertes de SuperQuinquin
 servers:
 - url: http://localhost:8080
   description: Auto generated value
