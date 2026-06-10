@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.6.0...v0.7.0) (2026-06-10)
+
+
+### Features
+
+* cleanup scannettes screen ([c351771](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/c35177118faab48315e3d6d2bc2b5a1208ffb22b))
+
+
+### Bug Fixes
+
+* update generated api export in frontend ([fb1ddd7](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/fb1ddd74caf59e333860bd2a41fd699cdecbf28b))
+
 ## [0.6.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.5.0...v0.6.0) (2026-06-10)
 
 
