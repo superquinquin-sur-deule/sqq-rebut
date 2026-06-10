@@ -16,27 +16,27 @@ produits concernés au rebut dans Odoo.
 1. **Choisir le type de relevé.** À l'ouverture, la scannette demande quoi relever :
    `DLC` ou `Pertes`.
 
-   ![Menu de la scannette](docs/img/scannette-menu.png)
+   <img src="docs/img/scannette-menu.png" alt="Menu de la scannette" width="250">
 
 2. **Scanner le produit.** L'écran « prêt à scanner » attend une lecture. Visez le
    code-barres : un bip confirme la reconnaissance du produit.
 
-   ![Écran de scan](docs/img/scannette-scan.png)
+   <img src="docs/img/scannette-scan.png" alt="Écran de scan" width="250">
 
 3a. **Si c'est une DLC** : choisissez l'urgence (J-0 / J-1 / J-2) ou une date exacte,
    ajustez la quantité (ou le poids), puis **Valider la ligne**.
 
-   ![Saisie d'une DLC](docs/img/scannette-dlc.png)
+   <img src="docs/img/scannette-dlc.png" alt="Saisie d'une DLC" width="250">
 
 3b. **Si c'est une perte** : choisissez le **motif**, ajustez la quantité, puis
    **Valider la ligne**.
 
-   ![Saisie d'une perte](docs/img/scannette-perte.png)
+   <img src="docs/img/scannette-perte.png" alt="Saisie d'une perte" width="250">
 
 4. **Vérifier le relevé.** L'onglet *Le relevé* liste tout ce qui a été saisi.
    Touchez une ligne pour modifier sa quantité/son motif ou la supprimer.
 
-   ![Onglet Le relevé](docs/img/scannette-liste.png)
+   <img src="docs/img/scannette-liste.png" alt="Onglet Le relevé" width="250">
 
 ### Côté poste — le responsable
 
@@ -107,7 +107,8 @@ docker run --rm -p 8080:8080 \
 > En production, pensez à passer `ODOO_REBUT_DRY_RUN=false` (sinon les rebuts ne sont que
 > simulés) et `APP_STAGING=false` (pour masquer le bandeau « Staging »).
 
-Healtcheck disponible sur `GET /q/health` (Quarkus SmallRye Health)
+Healthcheck disponible sur `GET /q/health`
+
 ---
 
 ## 5. Installer sur le terminal Zebra (PWA)
