@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Jeu d'icônes inline (port de data.jsx) — trait 2px arrondi, cohérent avec la charte.
 withDefaults(defineProps<{ name: string; size?: number; stroke?: number }>(), {
   size: 22,
   stroke: 2,

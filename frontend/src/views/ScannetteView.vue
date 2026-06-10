@@ -5,11 +5,12 @@ import ScanReady from '../components/scannette/ScanReady.vue';
 import ModeMenu from '../components/scannette/ModeMenu.vue';
 import EntryScreen, { type ValidatePayload } from '../components/scannette/EntryScreen.vue';
 import SessionList from '../components/scannette/SessionList.vue';
+import LineEditor from '../components/scannette/LineEditor.vue';
 import FlashConfirm from '../components/scannette/FlashConfirm.vue';
 import { useReleveStore } from '../store/releve';
 import { beep, errorBeep } from '../lib/sound';
 import type { Urgency } from '../lib/dates';
-import type { Product } from '../api';
+import type { Product, ReleveLineDto } from '../api';
 
 const store = useReleveStore();
 
@@ -17,6 +18,7 @@ const tab = ref<'scan' | 'liste'>('scan');
 const mode = ref<'menu' | 'dlc' | 'perte'>('menu');
 const phase = ref<'ready' | 'entry' | 'flash'>('ready');
 const product = ref<Product | null>(null);
+const editingLine = ref<ReleveLineDto | null>(null);
 const scanError = ref<string | null>(null);
 const busy = ref(false);
 const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; motifLabel?: string } | null>(null);
@@ -92,11 +94,36 @@ function cancel() {
   product.value = null;
 }
 
+function openScan() {
+  tab.value = 'scan';
+  editingLine.value = null;
+}
+
+async function onEditSave(patch: { qty: number; motifId?: number }) {
+  if (!editingLine.value) return;
+  try {
+    await store.updateLine(editingLine.value.id, patch);
+  } catch {
+    scanError.value = 'Échec de modification de la ligne';
+  }
+  editingLine.value = null;
+}
+
+async function onEditDelete() {
+  if (!editingLine.value) return;
+  try {
+    await store.remove(editingLine.value.id);
+  } catch {
+    scanError.value = 'Échec de suppression de la ligne';
+  }
+  editingLine.value = null;
+}
+
 onMounted(() => {
   store.fetchToday();
   store.fetchMotifs();
   poll = window.setInterval(() => {
-    if (phase.value !== 'entry') store.fetchToday();
+    if (phase.value !== 'entry' && !editingLine.value) store.fetchToday();
   }, 5000);
 });
 onUnmounted(() => {
@@ -131,7 +158,15 @@ onUnmounted(() => {
               <ScanReady v-else :error="scanError" :busy="busy" @scanned="onScanned" />
             </template>
           </template>
-          <SessionList v-else :lines="store.lines" />
+          <LineEditor
+            v-else-if="editingLine"
+            :line="editingLine"
+            :motifs="store.motifs"
+            @save="onEditSave"
+            @delete="onEditDelete"
+            @back="editingLine = null"
+          />
+          <SessionList v-else :lines="store.lines" @select="editingLine = $event" />
         </div>
 
         <FlashConfirm
@@ -144,7 +179,7 @@ onUnmounted(() => {
         />
 
         <div class="sc-tabs">
-          <button :class="['sc-tab', { 'is-on': tab === 'scan' }]" @click="tab = 'scan'">
+          <button :class="['sc-tab', { 'is-on': tab === 'scan' }]" @click="openScan">
             <Icon name="scan" :size="22" /><span class="lbl">Scanner</span>
           </button>
           <button :class="['sc-tab', { 'is-on': tab === 'liste' }]" @click="tab = 'liste'">

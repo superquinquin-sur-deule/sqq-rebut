@@ -41,9 +41,9 @@ public class ReleveResource {
 
     @PUT
     @Path("/lines/{id}")
-    @Operation(operationId = "updateLineQty", summary = "Modifier la quantité d'une ligne")
-    public ReleveLineDto update(@PathParam("id") Long id, UpdateQtyRequest req) {
-        return service.updateQty(id, req.qty());
+    @Operation(operationId = "updateLine", summary = "Modifier une ligne (quantité et/ou motif)")
+    public ReleveLineDto update(@PathParam("id") Long id, UpdateLineRequest req) {
+        return service.updateLine(id, req.qty(), req.motifId());
     }
 
     @DELETE

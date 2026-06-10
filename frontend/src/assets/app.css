@@ -1085,6 +1085,68 @@ input, select {
     padding: 40px;
 }
 
+/* ligne tappable (édition) — bouton plein largeur, alignée à gauche */
+button.sess-line {
+    width: 100%;
+    text-align: left;
+    transition: border-color 0.12s, background 0.12s, transform 0.1s;
+}
+
+button.sess-line:hover {
+    border-color: var(--sqq-brown);
+    background: var(--sqq-cream);
+}
+
+button.sess-line:active {
+    transform: scale(0.985);
+}
+
+.sess-line.is-sent {
+    opacity: 0.6;
+}
+
+.sess-line .sess-chev {
+    color: var(--sqq-brown-soft);
+    flex-shrink: 0;
+}
+
+.sess-line .sess-sent {
+    color: var(--sqq-teal);
+    flex-shrink: 0;
+}
+
+/* bandeau DLC/motif (lecture seule) de l'éditeur de ligne */
+.edit-tag {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sqq-brown-soft);
+}
+
+.edit-tag .urgdot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.edit-tag .urgdot.j1 {
+    background: var(--sqq-orange);
+}
+
+.edit-tag .urgdot.j2 {
+    background: var(--sqq-yellow);
+}
+
+.edit-del {
+    flex-shrink: 0;
+}
+
 /* bottom tab bar (scannette) */
 .sc-tabs {
     flex-shrink: 0;

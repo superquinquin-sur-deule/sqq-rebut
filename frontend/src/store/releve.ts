@@ -79,9 +79,13 @@ export const useReleveStore = defineStore('releve', {
       return line;
     },
 
-    async setQty(id: number, qty: number) {
-      await api.updateLineQty(id, { qty });
+    async updateLine(id: number, patch: { qty?: number; motifId?: number }) {
+      await api.updateLine(id, patch);
       await this.fetch();
+    },
+
+    async setQty(id: number, qty: number) {
+      await this.updateLine(id, { qty });
     },
 
     async remove(id: number) {

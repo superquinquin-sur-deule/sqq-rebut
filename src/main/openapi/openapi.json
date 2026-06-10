@@ -208,12 +208,16 @@
           }
         }
       },
-      "UpdateQtyRequest" : {
+      "UpdateLineRequest" : {
         "type" : "object",
         "properties" : {
           "qty" : {
             "type" : "number",
             "format" : "double"
+          },
+          "motifId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       }
@@ -357,8 +361,8 @@
     },
     "/api/releve/lines/{id}" : {
       "put" : {
-        "summary" : "Modifier la quantité d'une ligne",
-        "operationId" : "updateLineQty",
+        "summary" : "Modifier une ligne (quantité et/ou motif)",
+        "operationId" : "updateLine",
         "tags" : [ "Relevé" ],
         "parameters" : [ {
           "name" : "id",
@@ -373,7 +377,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/UpdateQtyRequest"
+                "$ref" : "#/components/schemas/UpdateLineRequest"
               }
             }
           },

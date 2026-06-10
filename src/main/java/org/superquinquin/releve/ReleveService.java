@@ -133,15 +133,26 @@ public class ReleveService {
     }
 
     @Transactional
-    public ReleveLineDto updateQty(Long id, double qty) {
-        if (!Double.isFinite(qty) || qty <= 0) {
-            throw new BadRequestException("Quantité invalide");
-        }
+    public ReleveLineDto updateLine(Long id, Double qty, Long motifId) {
         ReleveLine l = ReleveLine.findById(id);
         if (l == null) {
             throw new NotFoundException("Ligne introuvable: " + id);
         }
-        l.qty = round3(qty);
+        if (qty != null) {
+            if (!Double.isFinite(qty) || qty <= 0) {
+                throw new BadRequestException("Quantité invalide");
+            }
+            l.qty = round3(qty);
+        }
+        if (motifId != null) {
+            if (l.type != LineType.PERTE) {
+                throw new BadRequestException("Le motif ne s'applique qu'aux pertes");
+            }
+            Motif motif = motifs.byId(motifId)
+                    .orElseThrow(() -> new BadRequestException("Motif inconnu: " + motifId));
+            l.motifId = motif.id();
+            l.motifLabel = motif.label();
+        }
         return ReleveLineDto.from(l, LocalDate.now());
     }
 

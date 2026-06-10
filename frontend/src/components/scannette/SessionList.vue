@@ -6,6 +6,7 @@ import { fmtQty } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{ lines: ReleveLineDto[] }>();
+const emit = defineEmits<{ (e: 'select', line: ReleveLineDto): void }>();
 const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)));
 </script>
 
@@ -18,7 +19,14 @@ const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.i
     </div>
   </div>
   <div v-else class="sess-scroll">
-    <div v-for="l in sorted" :key="l.id" class="sess-line">
+    <component
+      :is="l.sent ? 'div' : 'button'"
+      v-for="l in sorted"
+      :key="l.id"
+      :type="l.sent ? undefined : 'button'"
+      :class="['sess-line', { 'is-sent': l.sent }]"
+      @click="!l.sent && emit('select', l)"
+    >
       <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.urgency]" />
       <div class="nm">
         <b>{{ l.name }}</b>
@@ -26,6 +34,8 @@ const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.i
         <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
       </div>
       <span class="q">{{ fmtQty(l.qty, l.uom) }}</span>
-    </div>
+      <Icon v-if="l.sent" name="checkCircle" :size="18" class="sess-sent" />
+      <Icon v-else name="chevR" :size="18" class="sess-chev" />
+    </component>
   </div>
 </template>

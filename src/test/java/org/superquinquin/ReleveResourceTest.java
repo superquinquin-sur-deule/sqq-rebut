@@ -118,6 +118,29 @@ class ReleveResourceTest {
     }
 
     @Test
+    void updateMotifOnPerteLine() {
+        int id = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 8, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        given().contentType(JSON).body(Map.of("motifId", 9))
+                .when().put("/api/releve/lines/" + id)
+                .then().statusCode(200)
+                .body("motifId", is(9))
+                .body("motifLabel", is("Consommable"))
+                .body("qty", is(2.0f));
+
+        // le motif ne s'applique pas à une ligne DLC
+        int dlcId = addLine(LocalDate.now().plusDays(1), 1);
+        given().contentType(JSON).body(Map.of("motifId", 9))
+                .when().put("/api/releve/lines/" + dlcId)
+                .then().statusCode(400);
+    }
+
+    @Test
     void addLineWithScaleBarcodeStoresWeightAndMerges() {
         // scan balance → résolu vers le barcode de base, poids décimal
         int id1 = given().contentType(JSON)
