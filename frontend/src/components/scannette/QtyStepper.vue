@@ -14,8 +14,5 @@ const set = (v: number) => emit('update', Math.max(1, v));
       <div class="val"><b>{{ props.qty }}</b><span>pièce{{ props.qty > 1 ? 's' : '' }}</span></div>
       <button aria-label="plus" @click="set(props.qty + 1)"><Icon name="plus" :size="26" /></button>
     </div>
-    <div v-if="!props.compact" class="qty-chips">
-      <button v-for="n in [1, 2, 5, 10]" :key="n" @click="set(n)">{{ n }}</button>
-    </div>
   </div>
 </template>

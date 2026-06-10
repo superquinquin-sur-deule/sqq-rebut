@@ -85,21 +85,6 @@ function validate() {
       <div v-if="props.mode === 'dlc'">
         <div class="field-label"><span>Date limite de consommation</span></div>
         <DlcGrid :value="urgency" @select="pickUrg" />
-        <div class="exact-date">
-          <button v-if="!showDate" :class="{ 'has-date': exactDate }" @click="showDate = true">
-            <Icon name="calendar" :size="16" />
-            {{ exactDate ? `DLC : ${fmtShort(parseISO(exactDate))}` : 'Choisir une date exacte' }}
-          </button>
-          <input
-            v-else
-            type="date"
-            :value="exactDate"
-            :min="minDate"
-            @change="onExact"
-            @blur="showDate = false"
-          />
-          <span v-if="urgency" class="dlc-readout">{{ URG[urgency].tag }} — {{ URG[urgency].label.toLowerCase() }}</span>
-        </div>
       </div>
 
       <div v-else>
