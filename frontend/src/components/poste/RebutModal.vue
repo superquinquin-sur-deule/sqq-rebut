@@ -47,17 +47,6 @@ const isPerte = computed(() => props.kind === 'perte');
           <span>Total au rebut</span>
           <b>{{ totalLabel }}</b>
         </div>
-        <div class="odoo-note">
-          <Icon name="box" :size="18" style="flex-shrink:0;color:var(--sqq-teal)" />
-          <div v-if="isPerte">
-            Crée <b>{{ props.lines.length }} ligne{{ props.lines.length > 1 ? 's' : '' }} de rebut</b>
-            dans Odoo (motif de chaque ligne), valide le mouvement de stock et retire ces lignes du relevé.
-          </div>
-          <div v-else>
-            Crée <b>{{ props.lines.length }} ligne{{ props.lines.length > 1 ? 's' : '' }} de rebut</b>
-            dans Odoo (motif : <i>DLC Dépassée</i>), valide le mouvement de stock et retire ces lignes du relevé.
-          </div>
-        </div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-ghost btn-md" @click="emit('close')">Annuler</button>
