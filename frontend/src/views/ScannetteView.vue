@@ -7,7 +7,7 @@ import EntryScreen, { type ValidatePayload } from '../components/scannette/Entry
 import SessionList from '../components/scannette/SessionList.vue';
 import FlashConfirm from '../components/scannette/FlashConfirm.vue';
 import { useReleveStore } from '../store/releve';
-import { beep } from '../lib/sound';
+import { beep, errorBeep } from '../lib/sound';
 import type { Urgency } from '../lib/dates';
 import type { Product } from '../api';
 
@@ -44,11 +44,13 @@ async function onScanned(code: string) {
   busy.value = true;
   try {
     product.value = await store.lookup(code);
+    beep();
     phase.value = 'entry';
     tab.value = 'scan';
   } catch (e) {
     const status = (e as { response?: { status?: number } })?.response?.status;
     scanError.value = status === 404 ? `Code inconnu : ${code}` : 'Erreur de recherche produit';
+    errorBeep();
   } finally {
     busy.value = false;
   }
