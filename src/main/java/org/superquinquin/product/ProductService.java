@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.superquinquin.barcode.BarcodeNomenclatureService;
+import org.superquinquin.barcode.ScaleBarcodeParser;
 import org.superquinquin.barcode.ScaleMatch;
 import org.superquinquin.odoo.OdooClient;
 
@@ -24,13 +25,32 @@ public class ProductService {
     BarcodeNomenclatureService nomenclature;
 
     public Optional<Product> findByBarcode(String scanned) {
-        Optional<Product> exact = fetchExact(scanned);
+        return lookup(scanned)
+                .or(() -> upcaToEan13(scanned).flatMap(this::lookup));
+    }
+
+    private Optional<Product> lookup(String barcode) {
+        Optional<Product> exact = fetchExact(barcode);
         if (exact.isPresent()) {
             return exact;
         }
-        return nomenclature.resolve(scanned)
+        return nomenclature.resolve(barcode)
                 .flatMap(m -> fetchExact(m.baseBarcode())
                         .map(p -> p.withScannedWeight(scannedWeight(m, p))));
+    }
+    
+    private static Optional<String> upcaToEan13(String scanned) {
+        if (scanned == null || !scanned.chars().allMatch(Character::isDigit)) {
+            return Optional.empty();
+        }
+        if (scanned.length() == 12) {
+            return Optional.of("0" + scanned);
+        }
+        if (scanned.length() == 11) {
+            String first12 = "0" + scanned;
+            return Optional.of(first12 + ScaleBarcodeParser.ean13Checksum(first12));
+        }
+        return Optional.empty();
     }
 
     private Optional<Product> fetchExact(String barcode) {

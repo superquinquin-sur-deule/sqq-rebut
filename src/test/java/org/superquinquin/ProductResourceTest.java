@@ -49,6 +49,26 @@ class ProductResourceTest {
     }
 
     @Test
+    void lookupUpcaScanWithoutSystemCharIsNormalized() {
+        given()
+                .when().get("/api/products/" + WireMockOdooResource.PRICE_SCALE_BARCODE.substring(1))
+                .then().statusCode(200)
+                .body("id", is(33617))
+                .body("barcode", is(WireMockOdooResource.PRICE_BASE_BARCODE))
+                .body("scannedWeight", is(0.5f));
+    }
+
+    @Test
+    void lookupUpcaScanWithoutSystemCharNorCheckDigitIsNormalized() {
+        given()
+                .when().get("/api/products/" + WireMockOdooResource.PRICE_SCALE_BARCODE.substring(1, 12))
+                .then().statusCode(200)
+                .body("id", is(33617))
+                .body("barcode", is(WireMockOdooResource.PRICE_BASE_BARCODE))
+                .body("scannedWeight", is(0.5f));
+    }
+
+    @Test
     void lookupUnknownBarcodeReturns404() {
         given()
                 .when().get("/api/products/" + WireMockOdooResource.UNKNOWN_BARCODE)
