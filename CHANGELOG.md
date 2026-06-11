@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.9.1...v0.10.0) (2026-06-11)
+
+
+### Features
+
+* sent pertes directly to rebut ([fb661a7](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/fb661a7365b97fe18d71288f8593127d8e445550))
+* support scale barcord without 0 prefix or hash ([284b618](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/284b618427032a3078cb246584e86adabc78e8c3))
+
+
+### Styles
+
+* prevent rayon column on releve to vary in size ([1ef3392](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/1ef339299077bc95db0c7862c5c7b74394b06d57))
+
 ## [0.9.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.9.0...v0.9.1) (2026-06-10)
 
 
