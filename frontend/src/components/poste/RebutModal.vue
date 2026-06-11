@@ -4,9 +4,7 @@ import Icon from '../Icon.vue';
 import { fmtQty, isWeightUom, round3 } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
-const props = withDefaults(defineProps<{ lines: ReleveLineDto[]; kind?: 'dlc' | 'perte' }>(), {
-  kind: 'dlc',
-});
+const props = defineProps<{ lines: ReleveLineDto[] }>();
 const emit = defineEmits<{ (e: 'confirm'): void; (e: 'close'): void }>();
 
 const pieces = computed(() => props.lines.filter((l) => !isWeightUom(l.uom)).reduce((s, l) => s + l.qty, 0));
@@ -17,7 +15,6 @@ const totalLabel = computed(() => {
   if (kilos.value > 0) parts.push(fmtQty(round3(kilos.value), 'kg'));
   return parts.join(' · ') || '0 pièce';
 });
-const isPerte = computed(() => props.kind === 'perte');
 </script>
 
 <template>
@@ -27,19 +24,14 @@ const isPerte = computed(() => props.kind === 'perte');
         <span class="ic"><Icon name="alert" :size="22" /></span>
         <div>
           <h3>Envoyer au rebut</h3>
-          <p v-if="isPerte">{{ props.lines.length }} perte{{ props.lines.length > 1 ? 's' : '' }} · motif choisi à la saisie</p>
-          <p v-else>{{ props.lines.length }} produit{{ props.lines.length > 1 ? 's' : '' }} en J-0 · périment aujourd'hui</p>
+          <p>{{ props.lines.length }} produit{{ props.lines.length > 1 ? 's' : '' }} en J-0 · périment aujourd'hui</p>
         </div>
       </div>
       <div class="modal-body">
         <div v-for="l in props.lines" :key="l.id" class="recap-line">
-          <span
-            class="urgdot"
-            :class="isPerte ? 'perte' : 'j0'"
-            style="width:10px;height:10px;border-radius:50%"
-          />
+          <span class="urgdot j0" style="width:10px;height:10px;border-radius:50%" />
           <div class="nm">
-            {{ l.name }}<small>{{ l.rayon }} · {{ isPerte ? l.motifLabel : l.barcode }}</small>
+            {{ l.name }}<small>{{ l.rayon }} · {{ l.barcode }}</small>
           </div>
           <span class="qd">{{ fmtQty(l.qty, l.uom) }}</span>
         </div>

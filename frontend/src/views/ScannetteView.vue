@@ -70,7 +70,7 @@ async function onValidate(payload: ValidatePayload) {
       await store.addLine({ barcode, qty: payload.qty, type: 'PERTE', motifId: payload.motifId });
     }
   } catch {
-    scanError.value = "Échec d'enregistrement de la ligne";
+    scanError.value = payload.type === 'PERTE' ? "Échec d'envoi au rebut" : "Échec d'enregistrement de la ligne";
     phase.value = 'ready';
     product.value = null;
     return;
@@ -99,7 +99,7 @@ function openScan() {
   editingLine.value = null;
 }
 
-async function onEditSave(patch: { qty: number; motifId?: number }) {
+async function onEditSave(patch: { qty: number }) {
   if (!editingLine.value) return;
   try {
     await store.updateLine(editingLine.value.id, patch);
@@ -161,7 +161,6 @@ onUnmounted(() => {
           <LineEditor
             v-else-if="editingLine"
             :line="editingLine"
-            :motifs="store.motifs"
             @save="onEditSave"
             @delete="onEditDelete"
             @back="editingLine = null"

@@ -52,4 +52,18 @@ class RebutDryRunTest {
         wiremock.verify(0, postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("\"create\"")));
     }
+
+    @Test
+    void addPerteDryRunDoesNotWriteToOdoo() {
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 8, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("sent", is(true))
+                .body("scrapRef", is("DRY-RUN"));
+
+        wiremock.verify(0, postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"create\"")));
+    }
 }

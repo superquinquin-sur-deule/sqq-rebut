@@ -90,14 +90,14 @@ public class ReleveService {
         Releve releve = getOrCreate(LocalDate.now());
         String barcode = p.barcode() != null ? p.barcode() : req.barcode();
 
-        ReleveLine existing = type == LineType.DLC
-                ? ReleveLine.find("releve = ?1 and barcode = ?2 and type = ?3 and dlc = ?4 and sent = false",
-                        releve, barcode, LineType.DLC, req.dlc()).firstResult()
-                : ReleveLine.find("releve = ?1 and barcode = ?2 and type = ?3 and motifId = ?4 and sent = false",
-                        releve, barcode, LineType.PERTE, req.motifId()).firstResult();
-        if (existing != null) {
-            existing.qty = round3(existing.qty + req.qty());
-            return ReleveLineDto.from(existing, LocalDate.now());
+        if (type == LineType.DLC) {
+            ReleveLine existing = ReleveLine.find(
+                    "releve = ?1 and barcode = ?2 and type = ?3 and dlc = ?4 and sent = false",
+                    releve, barcode, LineType.DLC, req.dlc()).firstResult();
+            if (existing != null) {
+                existing.qty = round3(existing.qty + req.qty());
+                return ReleveLineDto.from(existing, LocalDate.now());
+            }
         }
 
         ReleveLine l = new ReleveLine();
@@ -118,6 +118,9 @@ public class ReleveService {
         l.qty = round3(req.qty());
         l.sent = false;
         l.persist();
+        if (type == LineType.PERTE) {
+            scrapLine(l);
+        }
         return ReleveLineDto.from(l, LocalDate.now());
     }
 
@@ -133,25 +136,19 @@ public class ReleveService {
     }
 
     @Transactional
-    public ReleveLineDto updateLine(Long id, Double qty, Long motifId) {
+    public ReleveLineDto updateLine(Long id, Double qty) {
         ReleveLine l = ReleveLine.findById(id);
         if (l == null) {
             throw new NotFoundException("Ligne introuvable: " + id);
+        }
+        if (l.sent) {
+            throw new BadRequestException("Ligne déjà envoyée au rebut: " + id);
         }
         if (qty != null) {
             if (!Double.isFinite(qty) || qty <= 0) {
                 throw new BadRequestException("Quantité invalide");
             }
             l.qty = round3(qty);
-        }
-        if (motifId != null) {
-            if (l.type != LineType.PERTE) {
-                throw new BadRequestException("Le motif ne s'applique qu'aux pertes");
-            }
-            Motif motif = motifs.byId(motifId)
-                    .orElseThrow(() -> new BadRequestException("Motif inconnu: " + motifId));
-            l.motifId = motif.id();
-            l.motifLabel = motif.label();
         }
         return ReleveLineDto.from(l, LocalDate.now());
     }
@@ -167,9 +164,12 @@ public class ReleveService {
         if (l == null) {
             throw new NotFoundException("Ligne introuvable: " + id);
         }
+        if (l.sent) {
+            throw new BadRequestException("Ligne déjà envoyée au rebut: " + id);
+        }
         l.delete();
     }
-    
+
     @Transactional
     public RebutResult sendRebut(List<Long> ids) {
         LocalDate today = LocalDate.now();
@@ -177,28 +177,30 @@ public class ReleveService {
                 ? ReleveLine.list("id in ?1", ids)
                 : ReleveLine.list("releve.date", today);
         List<ReleveLine> targets = candidates.stream()
-                .filter(l -> !l.sent && (l.type == LineType.PERTE || Urgency.of(l.dlc, today) == Urgency.J0))
+                .filter(l -> !l.sent && l.type == LineType.DLC && Urgency.of(l.dlc, today) == Urgency.J0)
                 .toList();
 
-        boolean dryRun = config.rebut().dryRun();
         List<ReleveLineDto> done = new ArrayList<>();
-        int created = 0;
         for (ReleveLine l : targets) {
-            if (dryRun) {
-                Log.infof("[REBUT DRY-RUN] stock.scrap product_id=%s scrap_qty=%s uom=%s scrap_origin_id=%d",
-                        l.productId, l.qty, l.uom, scrapOriginId(l));
-                l.scrapRef = "DRY-RUN";
-            } else {
-                int scrapId = odoo.create("stock.scrap", scrapValues(l));
-                odoo.callButton("stock.scrap", List.of(scrapId), "action_validate");
-                l.scrapRef = String.valueOf(scrapId);
-                Log.infof("[REBUT] stock.scrap #%d validé pour %s (x%s)", scrapId, l.name, l.qty);
-            }
-            l.sent = true;
-            created++;
+            scrapLine(l);
             done.add(ReleveLineDto.from(l, today));
         }
-        return new RebutResult(created, dryRun, done);
+        return new RebutResult(done.size(), config.rebut().dryRun(), done);
+    }
+
+    /** Crée et valide le stock.scrap dans Odoo (ou log seulement en dry-run), puis marque la ligne envoyée. */
+    private void scrapLine(ReleveLine l) {
+        if (config.rebut().dryRun()) {
+            Log.infof("[REBUT DRY-RUN] stock.scrap product_id=%s scrap_qty=%s uom=%s scrap_origin_id=%d",
+                    l.productId, l.qty, l.uom, scrapOriginId(l));
+            l.scrapRef = "DRY-RUN";
+        } else {
+            int scrapId = odoo.create("stock.scrap", scrapValues(l));
+            odoo.callButton("stock.scrap", List.of(scrapId), "action_validate");
+            l.scrapRef = String.valueOf(scrapId);
+            Log.infof("[REBUT] stock.scrap #%d validé pour %s (x%s)", scrapId, l.name, l.qty);
+        }
+        l.sent = true;
     }
 
     private Map<String, Object> scrapValues(ReleveLine l) {

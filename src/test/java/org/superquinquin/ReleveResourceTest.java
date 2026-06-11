@@ -86,7 +86,7 @@ class ReleveResourceTest {
     }
 
     @Test
-    void addPerteLineUsesMotifLabelAndNoUrgency() {
+    void addPerteLineScrapsImmediatelyWithChosenMotif() {
         given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
                         "type", "PERTE", "motifId", 8, "qty", 2))
@@ -96,16 +96,25 @@ class ReleveResourceTest {
                 .body("motifLabel", is("Casse"))
                 .body("urgency", nullValue())
                 .body("dlc", nullValue())
-                .body("qty", is(2.0f));
+                .body("qty", is(2.0f))
+                .body("sent", is(true))
+                .body("scrapRef", is("9999"));
+
+        // le scrap part dès l'ajout, avec l'origine = le motif choisi (8)
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"scrap_origin_id\":8")));
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("action_validate")));
     }
 
     @Test
-    void addPerteMergesSameProductSameMotif() {
+    void addPerteNeverMerges() {
         int id1 = given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
                         "type", "PERTE", "motifId", 11, "qty", 2))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
+                .body("sent", is(true))
                 .extract().path("id");
 
         given().contentType(JSON)
@@ -113,12 +122,13 @@ class ReleveResourceTest {
                         "type", "PERTE", "motifId", 11, "qty", 3))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
-                .body("id", is(id1))
-                .body("qty", is(5.0f));
+                .body("id", not(id1))
+                .body("qty", is(3.0f))
+                .body("sent", is(true));
     }
 
     @Test
-    void updateMotifOnPerteLine() {
+    void updateOrDeleteSentLineReturns400() {
         int id = given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
                         "type", "PERTE", "motifId", 8, "qty", 2))
@@ -126,17 +136,10 @@ class ReleveResourceTest {
                 .then().statusCode(200)
                 .extract().path("id");
 
-        given().contentType(JSON).body(Map.of("motifId", 9))
+        given().contentType(JSON).body(Map.of("qty", 5))
                 .when().put("/api/releve/lines/" + id)
-                .then().statusCode(200)
-                .body("motifId", is(9))
-                .body("motifLabel", is("Consommable"))
-                .body("qty", is(2.0f));
-
-        // le motif ne s'applique pas à une ligne DLC
-        int dlcId = addLine(LocalDate.now().plusDays(1), 1);
-        given().contentType(JSON).body(Map.of("motifId", 9))
-                .when().put("/api/releve/lines/" + dlcId)
+                .then().statusCode(400);
+        given().when().delete("/api/releve/lines/" + id)
                 .then().statusCode(400);
     }
 
@@ -172,23 +175,20 @@ class ReleveResourceTest {
     }
 
     @Test
-    void rebutPerteScrapsWithChosenMotifOrigin() {
+    void rebutIgnoresPerteLines() {
         int id = given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
                         "type", "PERTE", "motifId", 9, "qty", 1))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
+                .body("sent", is(true))
                 .extract().path("id");
 
+        // la ligne est déjà partie au rebut à l'ajout : l'endpoint rebut ne la reprend pas
         given().contentType(JSON).body(Map.of("lineIds", java.util.List.of(id)))
                 .when().post("/api/releve/rebut")
                 .then().statusCode(200)
-                .body("created", greaterThanOrEqualTo(1))
-                .body("lines[0].sent", is(true));
-
-        // le scrap part avec l'origine = le motif choisi (9), pas la config DLC (7)
-        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
-                .withRequestBody(containing("\"scrap_origin_id\":9")));
+                .body("created", is(0));
     }
 
     @Test

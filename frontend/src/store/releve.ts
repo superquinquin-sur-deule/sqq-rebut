@@ -32,7 +32,6 @@ export const useReleveStore = defineStore('releve', {
     }),
     rayons: (s) => [...new Set(s.lines.map((l) => l.rayon).filter(Boolean))] as string[],
     j0Active: (s) => s.lines.filter((l) => l.urgency === 'j0' && !l.sent),
-    perteActive: (s) => s.lines.filter((l) => l.type === 'PERTE' && !l.sent),
   },
 
   actions: {
@@ -79,7 +78,7 @@ export const useReleveStore = defineStore('releve', {
       return line;
     },
 
-    async updateLine(id: number, patch: { qty?: number; motifId?: number }) {
+    async updateLine(id: number, patch: { qty?: number }) {
       await api.updateLine(id, patch);
       await this.fetch();
     },

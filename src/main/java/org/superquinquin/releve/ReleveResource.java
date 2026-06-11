@@ -43,10 +43,10 @@ public class ReleveResource {
 
     @PUT
     @Path("/lines/{id}")
-    @Operation(operationId = "updateLine", summary = "Modifier une ligne (quantité et/ou motif)")
+    @Operation(operationId = "updateLine", summary = "Modifier la quantité d'une ligne")
     public ReleveLineDto update(@PathParam("id") Long id, UpdateLineRequest req) {
-        Log.infof("Modification d'une ligne: id=%s, qty=%s, motifId=%s", id, req.qty(), req.motifId());
-        return service.updateLine(id, req.qty(), req.motifId());
+        Log.infof("Modification d'une ligne: id=%s, qty=%s", id, req.qty());
+        return service.updateLine(id, req.qty());
     }
 
     @DELETE
@@ -60,7 +60,7 @@ public class ReleveResource {
     @POST
     @Path("/rebut")
     @Operation(operationId = "sendRebut",
-            summary = "Envoyer des lignes au rebut (stock.scrap Odoo) — DLC J-0 et/ou pertes selon les ids")
+            summary = "Envoyer les DLC J-0 au rebut (stock.scrap Odoo)")
     public RebutResult rebut(RebutRequest req) {
         Log.infof("Envoi de rebut: lineIds=%s", req != null ? req.lineIds() : "tous");
         return service.sendRebut(req != null ? req.lineIds() : null);

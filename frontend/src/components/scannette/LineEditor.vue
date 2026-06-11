@@ -3,35 +3,30 @@ import { ref, computed } from 'vue';
 import Icon from '../Icon.vue';
 import QtyStepper from './QtyStepper.vue';
 import WeightInput from './WeightInput.vue';
-import MotifGrid from './MotifGrid.vue';
 import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
 import { isWeightUom, gToKg, kgToG } from '../../lib/qty';
-import type { Motif, ReleveLineDto } from '../../api';
+import type { ReleveLineDto } from '../../api';
 
-const props = defineProps<{ line: ReleveLineDto; motifs?: Motif[] }>();
+const props = defineProps<{ line: ReleveLineDto }>();
 const emit = defineEmits<{
-  (e: 'save', patch: { qty: number; motifId?: number }): void;
+  (e: 'save', patch: { qty: number }): void;
   (e: 'delete'): void;
   (e: 'back'): void;
 }>();
 
-const isPerte = computed(() => props.line.type === 'PERTE');
 const byWeight = computed(() => isWeightUom(props.line.uom));
 const quantity = ref(byWeight.value ? 1 : props.line.qty);
 const grams = ref<number | null>(byWeight.value ? kgToG(props.line.qty) : null);
-const motifId = ref<number | null>(props.line.motifId ?? null);
 const confirming = ref(false);
 
 const qtyForLine = computed(() =>
   byWeight.value ? (grams.value != null ? gToKg(grams.value) : null) : quantity.value,
 );
-const canSave = computed(
-  () => qtyForLine.value != null && qtyForLine.value > 0 && (!isPerte.value || motifId.value != null),
-);
+const canSave = computed(() => qtyForLine.value != null && qtyForLine.value > 0);
 
 function save() {
   if (!canSave.value) return;
-  emit('save', { qty: qtyForLine.value!, motifId: isPerte.value ? motifId.value! : undefined });
+  emit('save', { qty: qtyForLine.value! });
 }
 </script>
 
@@ -56,11 +51,7 @@ function save() {
         </div>
       </div>
 
-      <div v-if="isPerte">
-        <div class="field-label"><span>Motif de rupture</span></div>
-        <MotifGrid :motifs="props.motifs ?? []" :value="motifId" @select="motifId = $event" />
-      </div>
-      <div v-else class="edit-tag">
+      <div class="edit-tag">
         <span :class="['urgdot', props.line.urgency]" />
         <span>{{ URG[props.line.urgency as Urgency].tag }} · {{ fmtShort(parseISO(props.line.dlc as string)) }}</span>
       </div>

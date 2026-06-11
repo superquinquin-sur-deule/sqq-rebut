@@ -177,9 +177,6 @@ components:
         qty:
           type: number
           format: double
-        motifId:
-          type: integer
-          format: int64
 tags:
 - name: Configuration
 - name: Motifs
@@ -275,7 +272,7 @@ paths:
           description: Bad Request
   /api/releve/lines/{id}:
     put:
-      summary: Modifier une ligne (quantité et/ou motif)
+      summary: Modifier la quantité d'une ligne
       operationId: updateLine
       tags:
       - Relevé
@@ -318,8 +315,7 @@ paths:
           description: No Content
   /api/releve/rebut:
     post:
-      summary: Envoyer des lignes au rebut (stock.scrap Odoo) — DLC J-0 et/ou pertes
-        selon les ids
+      summary: Envoyer les DLC J-0 au rebut (stock.scrap Odoo)
       operationId: sendRebut
       tags:
       - Relevé

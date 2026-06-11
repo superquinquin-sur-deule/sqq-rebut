@@ -78,11 +78,12 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                 .withRequestBody(containing("product.product"))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":[]}")));
 
-        // stock.scrap.origin search_read — motifs de rupture (déjà filtrés côté Odoo : sans « DLC Dépassée »)
+        // stock.scrap.origin search_read — motifs de rupture (y compris « DLC Dépassée », id 7)
         server.stubFor(post(urlEqualTo("/jsonrpc"))
                 .atPriority(2)
                 .withRequestBody(containing("stock.scrap.origin"))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":["
+                        + "{\"id\":7,\"name\":\"DLC Dépassée\"},"
                         + "{\"id\":8,\"name\":\"Casse\"},"
                         + "{\"id\":9,\"name\":\"Consommable\"},"
                         + "{\"id\":11,\"name\":\"Pertes Fruits et légumes\"}]}")));

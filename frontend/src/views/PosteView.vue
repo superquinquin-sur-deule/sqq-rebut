@@ -16,7 +16,7 @@ const view = ref<'urgence' | 'tableau'>('urgence');
 const rayonFilter = ref('all');
 const query = ref('');
 const sort = ref<{ key: string; dir: 'asc' | 'desc' }>({ key: 'urg', dir: 'asc' });
-const modal = ref<'dlc' | 'perte' | null>(null);
+const modal = ref(false);
 const toastMsg = ref<string | null>(null);
 
 let toastTimer: number | undefined;
@@ -89,10 +89,9 @@ async function del(id: number) {
   await store.remove(id);
 }
 async function confirmRebut() {
-  const lines = modal.value === 'perte' ? store.perteActive : store.j0Active;
-  const ids = lines.map((l: ReleveLineDto) => l.id!).filter((x): x is number => x != null);
+  const ids = store.j0Active.map((l: ReleveLineDto) => l.id!).filter((x): x is number => x != null);
   const res = await store.sendRebut(ids);
-  modal.value = null;
+  modal.value = false;
   toast(res.dryRun ? `${res.created} ligne(s) simulées (dry-run)` : `${res.created} ligne(s) de rebut créées dans Odoo`);
 }
 async function refresh() {
@@ -133,10 +132,7 @@ onUnmounted(() => {
           <h1 class="dk-title">Relevé {{ dateLabel ? ` du ${dateLabel}` : '' }}</h1>
           <div class="dk-actions">
             <button class="btn btn-ghost btn-md" @click="refresh"><Icon name="refresh" :size="18" />Actualiser</button>
-            <button class="btn btn-dark btn-md" :disabled="!store.perteActive.length" @click="modal = 'perte'">
-              <Icon name="upload" :size="18" />Envoyer les pertes au rebut{{ store.perteActive.length ? ` (${store.perteActive.length})` : '' }}
-            </button>
-            <button class="btn btn-danger btn-md" :disabled="!store.j0Active.length" @click="modal = 'dlc'">
+            <button class="btn btn-danger btn-md" :disabled="!store.j0Active.length" @click="modal = true">
               <Icon name="upload" :size="18" />Envoyer les J-0 au rebut{{ store.j0Active.length ? ` (${store.j0Active.length})` : '' }}
             </button>
           </div>
@@ -198,13 +194,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <RebutModal
-      v-if="modal"
-      :kind="modal"
-      :lines="modal === 'perte' ? store.perteActive : store.j0Active"
-      @close="modal = null"
-      @confirm="confirmRebut"
-    />
+    <RebutModal v-if="modal" :lines="store.j0Active" @close="modal = false" @confirm="confirmRebut" />
     <div v-if="toastMsg" class="toast"><Icon name="checkCircle" :size="18" />{{ toastMsg }}</div>
   </div>
 </template>
