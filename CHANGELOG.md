@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.10.0...v0.11.0) (2026-06-12)
+
+
+### Features
+
+* allow searching product by name on scannette interface ([e1959e2](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/e1959e229de9fa28746485183e624007ad1f3485))
+* group dlc and pertes separately in scannette releve ([6125912](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/6125912dae19087009d53d2da5f487b93b86ed9e))
+* improve scannette hint ([187cac8](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/187cac85aa8fafb3e244aabafebc5246ed943022))
+
 ## [0.10.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.9.1...v0.10.0) (2026-06-11)
 
 
