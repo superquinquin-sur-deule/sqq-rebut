@@ -10,7 +10,7 @@ const tag = props.urg ? URG[props.urg].tag : (props.motifLabel ?? '');
 <template>
   <div class="flash">
     <div class="ring"><Icon name="check" :size="62" :stroke="3" /></div>
-    <h2>Ligne ajoutée</h2>
+    <h2>{{ props.urg ? 'Ligne ajoutée' : 'Envoyé au rebut' }}</h2>
     <div class="det">
       <div class="nm">{{ name }}</div>
       <div class="qd">
