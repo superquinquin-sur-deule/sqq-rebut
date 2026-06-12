@@ -270,6 +270,35 @@
         }
       }
     },
+    "/api/products" : {
+      "get" : {
+        "summary" : "Chercher des produits par nom (ilike, max 10, produits avec code-barres uniquement)",
+        "operationId" : "searchProducts",
+        "tags" : [ "Produits" ],
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products/{barcode}" : {
       "get" : {
         "summary" : "Chercher un produit par code-barres (EAN)",

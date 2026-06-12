@@ -89,6 +89,14 @@ async function onValidate(payload: ValidatePayload) {
   }, 1250);
 }
 
+function onPicked(p: Product) {
+  scanError.value = null;
+  product.value = p;
+  beep();
+  phase.value = 'entry';
+  tab.value = 'scan';
+}
+
 function cancel() {
   phase.value = 'ready';
   product.value = null;
@@ -161,6 +169,7 @@ onUnmounted(() => {
                 :error="scanError"
                 :busy="busy"
                 @scanned="onScanned"
+                @picked="onPicked"
               />
             </template>
           </template>

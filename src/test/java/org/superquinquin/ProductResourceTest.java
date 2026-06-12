@@ -74,4 +74,33 @@ class ProductResourceTest {
                 .when().get("/api/products/" + WireMockOdooResource.UNKNOWN_BARCODE)
                 .then().statusCode(404);
     }
+
+    @Test
+    void searchKnownQueryMapsList() {
+        given()
+                .when().get("/api/products?q=" + WireMockOdooResource.KNOWN_QUERY)
+                .then().statusCode(200)
+                .body("size()", is(2))
+                .body("[0].id", is(33616))
+                .body("[0].rayon", is("Viandes locales"))
+                .body("[0].soldByWeight", is(true))
+                .body("[1].name", is("Saucisse de Toulouse x4"))
+                .body("[1].soldByWeight", is(false));
+    }
+
+    @Test
+    void searchUnknownQueryReturnsEmptyList() {
+        given()
+                .when().get("/api/products?q=zzzznope")
+                .then().statusCode(200)
+                .body("size()", is(0));
+    }
+
+    @Test
+    void searchShortQueryReturnsEmptyListWithoutOdooCall() {
+        given()
+                .when().get("/api/products?q=ab")
+                .then().statusCode(200)
+                .body("size()", is(0));
+    }
 }

@@ -72,6 +72,10 @@ export const useReleveStore = defineStore('releve', {
       return api.getProductByBarcode(barcode);
     },
 
+    async searchProducts(q: string): Promise<Product[]> {
+      return api.searchProducts({ q });
+    },
+
     async addLine(req: NewLineRequest): Promise<ReleveLineDto> {
       const line = await api.addLine(req);
       await this.fetch();

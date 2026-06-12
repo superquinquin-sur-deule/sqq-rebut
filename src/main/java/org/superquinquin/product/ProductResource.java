@@ -7,9 +7,12 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+import java.util.List;
 
 @Path("/api/products")
 @Produces(MediaType.APPLICATION_JSON)
@@ -18,6 +21,14 @@ public class ProductResource {
 
     @Inject
     ProductService service;
+
+    @GET
+    @Operation(operationId = "searchProducts",
+            summary = "Chercher des produits par nom (ilike, max 10, produits avec code-barres uniquement)")
+    public List<Product> search(@QueryParam("q") String q) {
+        Log.info("Recherche de produits par nom : " + q);
+        return service.searchByName(q);
+    }
 
     @GET
     @Path("/{barcode}")

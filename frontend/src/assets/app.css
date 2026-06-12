@@ -576,15 +576,45 @@ input, select {
     border-color: var(--sqq-brown);
 }
 
+.search-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    background: var(--sqq-paper);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.search-modal .scan-manual {
+    width: auto;
+    max-width: none;
+    margin: 12px 14px 0;
+    flex-shrink: 0;
+}
+
+.search-modal .sess-line {
+    cursor: pointer;
+}
+
+.search-modal .scan-error {
+    padding: 4px 2px;
+}
+
+.scan-results-hint {
+    font-size: 12px;
+    color: var(--sqq-brown-soft);
+    padding: 4px 2px;
+}
+
 .scan-error {
     color: var(--sqq-terracotta);
-    font-family: var(--font-display);
+    font-family: var(--font-display), serif;
     font-weight: 700;
     font-size: 12px;
     letter-spacing: 0.04em;
 }
 
-/* ── ENTRY (produit + DLC + qté) ── */
 .entry {
     flex: 1;
     display: flex;

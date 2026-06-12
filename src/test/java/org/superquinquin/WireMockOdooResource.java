@@ -18,6 +18,7 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
     public static final String SCALE_BARCODE = "2200145012342";
     public static final String PRICE_SCALE_BARCODE = "0200145007135";
     public static final String PRICE_BASE_BARCODE = "0200145000006";
+    public static final String KNOWN_QUERY = "saucisse";
 
     private WireMockServer server;
 
@@ -59,6 +60,27 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                         + "\"list_price\":14.26,"
                         + "\"categ_id\":[239,\"Produits frais / Viandes locales\"],"
                         + "\"qty_available\":1.5}]}")));
+
+        // product.product search_read par nom (ilike) — requête connue
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(2)
+                .withRequestBody(containing("ilike"))
+                .withRequestBody(containing(KNOWN_QUERY))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":[{"
+                        + "\"id\":33616,"
+                        + "\"barcode\":\"" + KNOWN_BARCODE + "\","
+                        + "\"name\":\"FERME DU CRUSOBEAU Saucisse fine fromage\","
+                        + "\"uom_id\":[3,\"kg\"],"
+                        + "\"list_price\":14.26,"
+                        + "\"categ_id\":[239,\"Produits frais / Viandes locales\"],"
+                        + "\"qty_available\":2.248},{"
+                        + "\"id\":40001,"
+                        + "\"barcode\":\"3270190001234\","
+                        + "\"name\":\"Saucisse de Toulouse x4\","
+                        + "\"uom_id\":[1,\"Unité(s)\"],"
+                        + "\"list_price\":4.5,"
+                        + "\"categ_id\":[240,\"Produits frais / Charcuterie\"],"
+                        + "\"qty_available\":6.0}]}")));
 
         // barcode.rule search_read — règles balance (la règle encoding!=ean13 doit être ignorée)
         server.stubFor(post(urlEqualTo("/jsonrpc"))

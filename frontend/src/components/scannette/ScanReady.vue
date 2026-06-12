@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Icon from '../Icon.vue';
+import ProductSearchModal from './ProductSearchModal.vue';
+import type { Product } from '../../api';
 
 const props = defineProps<{ mode: 'dlc' | 'perte'; error?: string | null; busy?: boolean }>();
-const emit = defineEmits<{ (e: 'scanned', code: string): void }>();
+const emit = defineEmits<{ (e: 'scanned', code: string): void; (e: 'picked', product: Product): void }>();
 
 const code = ref('');
 const inp = ref<HTMLInputElement | null>(null);
 const bars = [16, 9, 22, 6, 14, 20, 8, 18, 11, 24, 7, 15, 19];
+
+const showSearch = ref(false);
+const searchQuery = ref('');
+
+const isBarcode = (v: string) => /^\d+$/.test(v);
 
 function focus() {
   nextTick(() => inp.value?.focus());
@@ -15,9 +22,25 @@ function focus() {
 
 function submit() {
   const v = code.value.trim();
-  code.value = '';
-  if (v) emit('scanned', v);
+  if (!v || isBarcode(v)) {
+    code.value = '';
+    if (v) emit('scanned', v);
+    focus();
+    return;
+  }
+  searchQuery.value = v;
+  showSearch.value = true;
+}
+
+function closeSearch() {
+  showSearch.value = false;
   focus();
+}
+
+function onPick(p: Product) {
+  showSearch.value = false;
+  code.value = '';
+  emit('picked', p);
 }
 
 let buf = '';
@@ -27,7 +50,7 @@ const GAP_MS = 50;
 function onKeydown(e: KeyboardEvent) {
   const a = document.activeElement;
   if (a instanceof HTMLInputElement || a instanceof HTMLTextAreaElement) return;
-  if (props.busy) return;
+  if (props.busy || showSearch.value) return;
 
   const now = e.timeStamp;
   if (now - last > GAP_MS) buf = '';
@@ -69,15 +92,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
       <input
         ref="inp"
         v-model="code"
-        inputmode="numeric"
+        inputmode="text"
+        enterkeyhint="search"
         autocomplete="off"
-        placeholder="Code-barres EAN…"
+        placeholder="Code-barres ou nom du produit…"
         :disabled="props.busy"
       />
-      <button class="btn btn-primary btn-md" type="submit" :disabled="props.busy">
-        <Icon name="scan" :size="18" />
+      <button class="btn btn-primary btn-md" type="submit" :disabled="props.busy" aria-label="Scanner ou chercher">
+        <Icon name="search" :size="18" />
       </button>
     </form>
     <div v-if="props.error" class="scan-error">{{ props.error }}</div>
+    <ProductSearchModal
+      v-if="showSearch"
+      :initial-query="searchQuery"
+      @pick="onPick"
+      @close="closeSearch"
+    />
   </div>
 </template>
