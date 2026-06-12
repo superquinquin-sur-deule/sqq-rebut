@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.11.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.11.0...v0.11.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **deps:** update quarkus.platform.version to v3.36.2 ([ca7f4dd](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/ca7f4dd4fa032ba8a83197940cd8f6654e000abc))
+
+
+### Miscellaneous Chores
+
+* **deps:** update actions/setup-node action to v6 ([7945303](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/794530345f65fee92b66e22849acf6f4327eb73d))
+* **deps:** update dependency org.wiremock:wiremock-standalone to v3.13.2 ([0216442](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/0216442f37dc25d26331d21027ff4974d01a9d82))
+* **deps:** update registry.access.redhat.com/ubi9/openjdk-21-runtime docker tag to v1.24-2.1780581570 ([ff2d94d](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/ff2d94d7764b9bc8360fde9807ea3e61138504e4))
+* **deps:** update registry.access.redhat.com/ubi9/ubi-minimal docker tag to v9.8-1780378819 ([4cac7df](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/4cac7df7aa14fbaec51260a9a4dd25279aa90d8d))
+* **deps:** update vue monorepo to v3.5.38 ([16eee00](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/16eee004ec70404e2e2a90bd8a8812243c50cb15))
+
 ## [0.11.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.10.0...v0.11.0) (2026-06-12)
 
 
