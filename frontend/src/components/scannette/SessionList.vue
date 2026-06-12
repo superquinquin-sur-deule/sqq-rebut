@@ -8,6 +8,14 @@ import type { ReleveLineDto } from '../../api';
 const props = defineProps<{ lines: ReleveLineDto[] }>();
 const emit = defineEmits<{ (e: 'select', line: ReleveLineDto): void }>();
 const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)));
+const groups = computed(() => {
+  const sent = sorted.value.filter((l) => l.sent);
+  const active = sorted.value.filter((l) => !l.sent);
+  return [
+    { key: 'sent', title: 'Envoyé au rebut', lines: sent },
+    { key: 'active', title: 'Suivi DLC', lines: active },
+  ].filter((g) => g.lines.length);
+});
 </script>
 
 <template>
@@ -19,23 +27,26 @@ const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.i
     </div>
   </div>
   <div v-else class="sess-scroll">
-    <component
-      :is="l.sent ? 'div' : 'button'"
-      v-for="l in sorted"
-      :key="l.id"
-      :type="l.sent ? undefined : 'button'"
-      :class="['sess-line', { 'is-sent': l.sent }]"
-      @click="!l.sent && emit('select', l)"
-    >
-      <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.urgency]" />
-      <div class="nm">
-        <b>{{ l.name }}</b>
-        <span v-if="l.type === 'PERTE'">{{ l.motifLabel }} · {{ l.rayon }}</span>
-        <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
-      </div>
-      <span class="q">{{ fmtQty(l.qty, l.uom) }}</span>
-      <Icon v-if="l.sent" name="checkCircle" :size="18" class="sess-sent" />
-      <Icon v-else name="chevR" :size="18" class="sess-chev" />
-    </component>
+    <template v-for="g in groups" :key="g.key">
+      <div class="sess-group-head">{{ g.title }} · {{ g.lines.length }}</div>
+      <component
+        :is="l.sent ? 'div' : 'button'"
+        v-for="l in g.lines"
+        :key="l.id"
+        :type="l.sent ? undefined : 'button'"
+        :class="['sess-line', { 'is-sent': l.sent }]"
+        @click="!l.sent && emit('select', l)"
+      >
+        <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.urgency]" />
+        <div class="nm">
+          <b>{{ l.name }}</b>
+          <span v-if="l.type === 'PERTE'">{{ l.motifLabel }} · {{ l.rayon }}</span>
+          <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
+        </div>
+        <span class="q">{{ fmtQty(l.qty, l.uom) }}</span>
+        <Icon v-if="l.sent" name="checkCircle" :size="18" class="sess-sent" />
+        <Icon v-else name="chevR" :size="18" class="sess-chev" />
+      </component>
+    </template>
   </div>
 </template>

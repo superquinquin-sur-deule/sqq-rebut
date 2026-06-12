@@ -1057,6 +1057,20 @@ input, select {
     gap: 8px;
 }
 
+.sess-group-head {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sqq-brown-soft);
+    padding: 2px 2px 0;
+}
+
+.sess-group-head:not(:first-child) {
+    margin-top: 8px;
+}
+
 .sess-line {
     display: flex;
     align-items: center;
