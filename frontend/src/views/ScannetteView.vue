@@ -155,7 +155,13 @@ onUnmounted(() => {
                 @validate="onValidate"
                 @cancel="cancel"
               />
-              <ScanReady v-else :error="scanError" :busy="busy" @scanned="onScanned" />
+              <ScanReady
+                v-else
+                :mode="mode === 'perte' ? 'perte' : 'dlc'"
+                :error="scanError"
+                :busy="busy"
+                @scanned="onScanned"
+              />
             </template>
           </template>
           <LineEditor

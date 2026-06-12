@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Icon from '../Icon.vue';
 
-const props = defineProps<{ error?: string | null; busy?: boolean }>();
+const props = defineProps<{ mode: 'dlc' | 'perte'; error?: string | null; busy?: boolean }>();
 const emit = defineEmits<{ (e: 'scanned', code: string): void }>();
 
 const code = ref('');
@@ -20,13 +20,9 @@ function submit() {
   focus();
 }
 
-// La scannette Zebra agit en "wedge clavier" : elle injecte le code touche par touche
-// puis envoie Entrée. On l'écoute au niveau de window (sans champ focalisé, donc sans
-// ouvrir le clavier virtuel du téléphone). La saisie manuelle passe, elle, par le <form>
-// quand l'utilisateur tape dans l'input — le listener s'efface alors pour ne pas doubler.
 let buf = '';
 let last = 0;
-const GAP_MS = 50; // un wedge enchaîne les frappes < ~50ms ; au-delà on reset le buffer
+const GAP_MS = 50;
 
 function onKeydown(e: KeyboardEvent) {
   const a = document.activeElement;
@@ -61,7 +57,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
     </div>
     <div>
       <h2>Prêt à scanner</h2>
-      <p>Vise le code-barres d'un produit frais à relever (DLC à J-2 ou moins).</p>
+      <p>
+        {{
+          props.mode === 'perte'
+            ? "Vise le code-barres d'un produit à envoyer au rebut"
+            : "Vise le code-barres d'un produit frais à relever (DLC à J-2 ou moins)."
+        }}
+      </p>
     </div>
     <form class="scan-manual" @submit.prevent="submit">
       <input
