@@ -4,7 +4,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.time.LocalDate;
 
-@Schema(requiredProperties = {"id", "barcode", "name", "type", "qty", "sent"})
+@Schema(requiredProperties = {"id", "name", "type", "qty", "sent"})
 public record ReleveLineDto(
         Long id,
         String barcode,

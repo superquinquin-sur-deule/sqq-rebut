@@ -23,7 +23,6 @@ public class ReleveLine extends PanacheEntity {
     @Column(name = "product_id")
     public Long productId;
 
-    @Column(nullable = false)
     public String barcode;
 
     @Column(nullable = false)

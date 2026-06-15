@@ -19,6 +19,8 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
     public static final String PRICE_SCALE_BARCODE = "0200145007135";
     public static final String PRICE_BASE_BARCODE = "0200145000006";
     public static final String KNOWN_QUERY = "saucisse";
+    public static final long NO_BARCODE_PRODUCT_ID = 51000;
+    public static final String NO_BARCODE_QUERY = "salade";
 
     private WireMockServer server;
 
@@ -81,6 +83,36 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                         + "\"list_price\":4.5,"
                         + "\"categ_id\":[240,\"Produits frais / Charcuterie\"],"
                         + "\"qty_available\":6.0}]}")));
+
+        // product.product search_read par id — produit sans code-barres (salade)
+        // NB : matcher le fragment ["id","=", et non "id" seul (product_id/uom_id/categ_id contiennent « id »).
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(2)
+                .withRequestBody(containing("product.product"))
+                .withRequestBody(containing("[\"id\",\"=\","))
+                .withRequestBody(containing(String.valueOf(NO_BARCODE_PRODUCT_ID)))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":[{"
+                        + "\"id\":" + NO_BARCODE_PRODUCT_ID + ","
+                        + "\"barcode\":false,"
+                        + "\"name\":\"Salade verte\","
+                        + "\"uom_id\":[1,\"Unité(s)\"],"
+                        + "\"list_price\":1.2,"
+                        + "\"categ_id\":[300,\"Produits frais / Fruits et légumes\"],"
+                        + "\"qty_available\":12.0}]}")));
+
+        // product.product search_read par nom (ilike) — produit sans code-barres
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(2)
+                .withRequestBody(containing("ilike"))
+                .withRequestBody(containing(NO_BARCODE_QUERY))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":[{"
+                        + "\"id\":" + NO_BARCODE_PRODUCT_ID + ","
+                        + "\"barcode\":false,"
+                        + "\"name\":\"Salade verte\","
+                        + "\"uom_id\":[1,\"Unité(s)\"],"
+                        + "\"list_price\":1.2,"
+                        + "\"categ_id\":[300,\"Produits frais / Fruits et légumes\"],"
+                        + "\"qty_available\":12.0}]}")));
 
         // barcode.rule search_read — règles balance (la règle encoding!=ean13 doit être ignorée)
         server.stubFor(post(urlEqualTo("/jsonrpc"))

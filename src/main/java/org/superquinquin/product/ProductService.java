@@ -57,14 +57,24 @@ public class ProductService {
         return Optional.empty();
     }
 
+    public Optional<Product> findById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        Object domain = List.of(List.of("id", "=", id));
+        JsonNode res = odoo.searchRead("product.product", domain, FIELDS, 1);
+        if (res == null || !res.isArray() || res.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(toProduct(res.get(0), null));
+    }
+
     public List<Product> searchByName(String q) {
         String query = q == null ? "" : q.strip();
         if (query.length() < MIN_QUERY_LENGTH) {
             return List.of();
         }
-        Object domain = List.of(
-                List.of("name", "ilike", query),
-                List.of("barcode", "!=", false));
+        Object domain = List.of(List.of("name", "ilike", query));
         JsonNode res = odoo.searchRead("product.product", domain, FIELDS, SEARCH_LIMIT);
         if (res == null || !res.isArray()) {
             return List.of();
