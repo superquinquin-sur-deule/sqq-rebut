@@ -4,7 +4,7 @@ import Icon from '../Icon.vue';
 import ProductSearchModal from './ProductSearchModal.vue';
 import type { Product } from '../../api';
 
-const props = defineProps<{ mode: 'dlc' | 'perte'; error?: string | null; busy?: boolean }>();
+const props = defineProps<{ mode: 'dlc' | 'perte' | 'stock'; error?: string | null; busy?: boolean }>();
 const emit = defineEmits<{ (e: 'scanned', code: string): void; (e: 'picked', product: Product): void }>();
 
 const code = ref('');
@@ -84,7 +84,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
         {{
           props.mode === 'perte'
             ? "Vise le code-barres d'un produit à envoyer au rebut"
-            : "Vise le code-barres d'un produit frais à relever (DLC à J-2 ou moins)."
+            : props.mode === 'stock'
+              ? "Vise le code-barres d'un produit pour voir son stock."
+              : "Vise le code-barres d'un produit frais à relever (DLC à J-2 ou moins)."
         }}
       </p>
     </div>

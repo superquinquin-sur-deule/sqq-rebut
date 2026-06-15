@@ -2108,6 +2108,18 @@ button.sess-line:active {
     color: var(--sqq-teal);
 }
 
+.mode-btn.stock {
+    border-color: var(--sqq-brown);
+    background: rgba(60, 49, 46, 0.06);
+}
+.mode-btn.stock .mode-ic {
+    background: var(--sqq-brown);
+    color: #fff;
+}
+.mode-btn.stock .mode-title {
+    color: var(--sqq-brown);
+}
+
 /* ── Barre de mode (retour au menu) ── */
 .sc-modebar {
     display: flex;
@@ -2146,6 +2158,38 @@ button.sess-line:active {
 }
 .sc-mode-label.perte {
     color: var(--sqq-teal);
+}
+.sc-mode-label.stock {
+    color: var(--sqq-brown);
+}
+
+/* ── Consultation du stock (scannette) ── */
+.stock-box {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 16px;
+    border-radius: 16px;
+    border: 2px solid var(--sqq-brown);
+    background: rgba(60, 49, 46, 0.06);
+    text-align: center;
+}
+.stock-box-label {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sqq-brown-soft);
+}
+.stock-box-value {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(34px, 12cqw, 48px);
+    line-height: 1;
+    color: var(--sqq-brown);
 }
 
 /* ── Sélection du motif de rupture (scannette) ── */

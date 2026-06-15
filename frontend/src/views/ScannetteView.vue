@@ -4,6 +4,7 @@ import Icon from '../components/Icon.vue';
 import ScanReady from '../components/scannette/ScanReady.vue';
 import ModeMenu from '../components/scannette/ModeMenu.vue';
 import EntryScreen, { type ValidatePayload } from '../components/scannette/EntryScreen.vue';
+import StockScreen from '../components/scannette/StockScreen.vue';
 import SessionList from '../components/scannette/SessionList.vue';
 import LineEditor from '../components/scannette/LineEditor.vue';
 import FlashConfirm from '../components/scannette/FlashConfirm.vue';
@@ -15,7 +16,7 @@ import type { Product, ReleveLineDto } from '../api';
 const store = useReleveStore();
 
 const tab = ref<'scan' | 'liste'>('scan');
-const mode = ref<'menu' | 'dlc' | 'perte'>('menu');
+const mode = ref<'menu' | 'dlc' | 'perte' | 'stock'>('menu');
 const phase = ref<'ready' | 'entry' | 'flash'>('ready');
 const product = ref<Product | null>(null);
 const editingLine = ref<ReleveLineDto | null>(null);
@@ -26,7 +27,7 @@ const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; 
 let flashTimer: number | undefined;
 let poll: number | undefined;
 
-function pickMode(m: 'dlc' | 'perte') {
+function pickMode(m: 'dlc' | 'perte' | 'stock') {
   mode.value = m;
   phase.value = 'ready';
   product.value = null;
@@ -154,10 +155,17 @@ onUnmounted(() => {
                 <button class="sc-back" @click="backToMenu" aria-label="Retour au menu">
                   <Icon name="arrowLeft" :size="20" />
                 </button>
-                <span class="sc-mode-label" :class="mode">{{ mode === 'dlc' ? 'Relevé DLC' : 'Relevé Pertes' }}</span>
+                <span class="sc-mode-label" :class="mode">{{
+                  mode === 'dlc' ? 'Relevé DLC' : mode === 'perte' ? 'Relevé Pertes' : 'Consulter le stock'
+                }}</span>
               </div>
+              <StockScreen
+                v-if="mode === 'stock' && phase === 'entry' && product"
+                :product="product"
+                @again="cancel"
+              />
               <EntryScreen
-                v-if="phase === 'entry' && product"
+                v-else-if="phase === 'entry' && product"
                 :product="product"
                 :mode="mode === 'perte' ? 'perte' : 'dlc'"
                 :motifs="store.motifs"
@@ -166,7 +174,7 @@ onUnmounted(() => {
               />
               <ScanReady
                 v-else
-                :mode="mode === 'perte' ? 'perte' : 'dlc'"
+                :mode="mode"
                 :error="scanError"
                 :busy="busy"
                 @scanned="onScanned"
@@ -193,7 +201,7 @@ onUnmounted(() => {
           :motif-label="flashData.motifLabel"
         />
 
-        <div class="sc-tabs">
+        <div v-if="mode !== 'stock'" class="sc-tabs">
           <button :class="['sc-tab', { 'is-on': tab === 'scan' }]" @click="openScan">
             <Icon name="scan" :size="22" /><span class="lbl">Scanner</span>
           </button>
