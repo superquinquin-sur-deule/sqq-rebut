@@ -62,12 +62,13 @@ async function onValidate(payload: ValidatePayload) {
   if (!product.value) return;
   const name = product.value.name ?? '';
   const barcode = product.value.barcode ?? '';
+  const productId = product.value.id;
   const uom = product.value.uom;
   try {
     if (payload.type === 'DLC') {
-      await store.addLine({ barcode, dlc: payload.dlc, qty: payload.qty, type: 'DLC' });
+      await store.addLine({ barcode, productId, dlc: payload.dlc, qty: payload.qty, type: 'DLC' });
     } else {
-      await store.addLine({ barcode, qty: payload.qty, type: 'PERTE', motifId: payload.motifId });
+      await store.addLine({ barcode, productId, qty: payload.qty, type: 'PERTE', motifId: payload.motifId });
     }
   } catch {
     scanError.value = payload.type === 'PERTE' ? "Échec d'envoi au rebut" : "Échec d'enregistrement de la ligne";

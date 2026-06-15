@@ -2,7 +2,7 @@ package org.superquinquin.product;
 
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-@Schema(requiredProperties = {"id", "barcode", "name", "uom", "uomId", "price", "qtyAvailable", "soldByWeight"})
+@Schema(requiredProperties = {"id", "name", "uom", "uomId", "price", "qtyAvailable", "soldByWeight"})
 public record Product(
         Long id,
         String barcode,

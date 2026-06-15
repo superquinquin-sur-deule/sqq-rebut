@@ -30,6 +30,9 @@ components:
       properties:
         barcode:
           type: string
+        productId:
+          type: integer
+          format: int64
         dlc:
           $ref: "#/components/schemas/LocalDate"
         qty:
@@ -43,7 +46,6 @@ components:
     Product:
       required:
       - id
-      - barcode
       - name
       - uom
       - uomId
@@ -121,7 +123,6 @@ components:
       type: object
       required:
       - id
-      - barcode
       - name
       - type
       - qty
@@ -214,8 +215,7 @@ paths:
                   $ref: "#/components/schemas/Motif"
   /api/products:
     get:
-      summary: "Chercher des produits par nom (ilike, max 10, produits avec code-barres\
-        \ uniquement)"
+      summary: "Chercher des produits par nom (ilike, max 10, code-barres ou non)"
       operationId: searchProducts
       tags:
       - Produits

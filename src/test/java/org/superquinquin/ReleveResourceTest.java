@@ -192,6 +192,62 @@ class ReleveResourceTest {
     }
 
     @Test
+    void addLineByProductIdWithoutBarcode() {
+        given().contentType(JSON)
+                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,
+                        "dlc", LocalDate.now().plusDays(2).toString(), "qty", 1))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("name", is("Salade verte"))
+                .body("barcode", nullValue())
+                .body("urgency", is("j2"))
+                .body("qty", is(1.0f));
+    }
+
+    @Test
+    void addLineByProductIdDedupsByProductId() {
+        int id1 = given().contentType(JSON)
+                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,
+                        "dlc", LocalDate.now().plusDays(3).toString(), "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        given().contentType(JSON)
+                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,
+                        "dlc", LocalDate.now().plusDays(3).toString(), "qty", 3))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(5.0f));
+    }
+
+    @Test
+    void addLineWithoutBarcodeNorProductIdReturns400() {
+        given().contentType(JSON)
+                .body(Map.of("dlc", LocalDate.now().plusDays(1).toString(), "qty", 1))
+                .when().post("/api/releve/lines")
+                .then().statusCode(400);
+    }
+
+    @Test
+    void addPerteByProductIdScrapsWithoutBarcode() {
+        given().contentType(JSON)
+                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,
+                        "type", "PERTE", "motifId", 8, "qty", 1))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("type", is("PERTE"))
+                .body("barcode", nullValue())
+                .body("sent", is(true))
+                .body("scrapRef", is("9999"));
+
+        // le scrap est créé par product_id, sans code-barres
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"product_id\":" + WireMockOdooResource.NO_BARCODE_PRODUCT_ID)));
+    }
+
+    @Test
     void rebutJ0CreatesAndValidatesScrapWithBasicAuth() {
         given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,

@@ -35,6 +35,10 @@
           "barcode" : {
             "type" : "string"
           },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "dlc" : {
             "$ref" : "#/components/schemas/LocalDate"
           },
@@ -52,7 +56,7 @@
         }
       },
       "Product" : {
-        "required" : [ "id", "barcode", "name", "uom", "uomId", "price", "qtyAvailable", "soldByWeight" ],
+        "required" : [ "id", "name", "uom", "uomId", "price", "qtyAvailable", "soldByWeight" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -145,7 +149,7 @@
       },
       "ReleveLineDto" : {
         "type" : "object",
-        "required" : [ "id", "barcode", "name", "type", "qty", "sent" ],
+        "required" : [ "id", "name", "type", "qty", "sent" ],
         "properties" : {
           "id" : {
             "type" : "integer",
@@ -272,7 +276,7 @@
     },
     "/api/products" : {
       "get" : {
-        "summary" : "Chercher des produits par nom (ilike, max 10, produits avec code-barres uniquement)",
+        "summary" : "Chercher des produits par nom (ilike, max 10, code-barres ou non)",
         "operationId" : "searchProducts",
         "tags" : [ "Produits" ],
         "parameters" : [ {

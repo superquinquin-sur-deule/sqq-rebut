@@ -64,8 +64,10 @@ public class ReleveService {
 
     @Transactional
     public ReleveLineDto addLine(NewLineRequest req) {
-        if (req == null || req.barcode() == null || req.barcode().isBlank()) {
-            throw new BadRequestException("Code-barres manquant");
+        boolean hasBarcode = req != null && req.barcode() != null && !req.barcode().isBlank();
+        boolean hasProductId = req != null && req.productId() != null;
+        if (req == null || (!hasBarcode && !hasProductId)) {
+            throw new BadRequestException("Identifiant produit manquant (code-barres ou productId)");
         }
         if (!Double.isFinite(req.qty()) || req.qty() <= 0) {
             throw new BadRequestException("Quantité invalide");
@@ -84,16 +86,18 @@ public class ReleveService {
                     .orElseThrow(() -> new BadRequestException("Motif inconnu: " + req.motifId()));
         }
 
-        Product p = products.findByBarcode(req.barcode())
-                .orElseThrow(() -> new NotFoundException("Produit inconnu pour le code-barres " + req.barcode()));
+        Product p = (hasBarcode ? products.findByBarcode(req.barcode())
+                                : products.findById(req.productId()))
+                .orElseThrow(() -> new NotFoundException("Produit inconnu ("
+                        + (hasBarcode ? "code-barres " + req.barcode() : "id " + req.productId()) + ")"));
 
         Releve releve = getOrCreate(LocalDate.now());
-        String barcode = p.barcode() != null ? p.barcode() : req.barcode();
+        String barcode = p.barcode() != null ? p.barcode() : (hasBarcode ? req.barcode() : null);
 
         if (type == LineType.DLC) {
             ReleveLine existing = ReleveLine.find(
-                    "releve = ?1 and barcode = ?2 and type = ?3 and dlc = ?4 and sent = false",
-                    releve, barcode, LineType.DLC, req.dlc()).firstResult();
+                    "releve = ?1 and productId = ?2 and type = ?3 and dlc = ?4 and sent = false",
+                    releve, p.id(), LineType.DLC, req.dlc()).firstResult();
             if (existing != null) {
                 existing.qty = round3(existing.qty + req.qty());
                 return ReleveLineDto.from(existing, LocalDate.now());

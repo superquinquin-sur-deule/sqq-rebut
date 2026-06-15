@@ -77,7 +77,7 @@ function validate() {
           <div class="prod-name">{{ props.product.name }}</div>
           <div class="prod-meta">
             <span class="prod-rayon">{{ props.product.rayon }}</span>
-            <span class="code">{{ props.product.barcode }}</span>
+            <span class="code">{{ props.product.barcode || 'sans code-barres' }}</span>
           </div>
         </div>
       </div>

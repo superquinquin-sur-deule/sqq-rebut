@@ -24,7 +24,7 @@ public class ProductResource {
 
     @GET
     @Operation(operationId = "searchProducts",
-            summary = "Chercher des produits par nom (ilike, max 10, produits avec code-barres uniquement)")
+            summary = "Chercher des produits par nom (ilike, max 10, code-barres ou non)")
     public List<Product> search(@QueryParam("q") String q) {
         Log.info("Recherche de produits par nom : " + q);
         return service.searchByName(q);
