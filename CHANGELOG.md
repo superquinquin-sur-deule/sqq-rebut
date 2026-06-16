@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.12.0...v0.13.0) (2026-06-16)
+
+
+### Features
+
+* rework releve interface ([48ecb8b](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/48ecb8bee3866f2ec7affb8e273b5d9f3cf51506))
+
+
+### Bug Fixes
+
+* fix validation message for pertes ([5fef304](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/5fef3044912e580d611b60e4b3726048393e48e5))
+
 ## [0.12.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.11.0...v0.12.0) (2026-06-15)
 
 
