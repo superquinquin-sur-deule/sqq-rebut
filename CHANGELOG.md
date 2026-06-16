@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.13.0...v0.14.0) (2026-06-16)
+
+
+### Features
+
+* force rebut event when not enough stock for fleg ([ee15afe](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/ee15afeb9020cd5128e929ce742c3c9de7d010da))
+
+
+### Bug Fixes
+
+* **deps:** update dependency io.quarkiverse.quinoa:quarkus-quinoa to v2.8.3 ([7e35072](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/7e35072355209f55908c182316180c65c17f1c31))
+
 ## [0.13.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.12.0...v0.13.0) (2026-06-16)
 
 
