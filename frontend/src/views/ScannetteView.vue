@@ -22,7 +22,7 @@ const product = ref<Product | null>(null);
 const editingLine = ref<ReleveLineDto | null>(null);
 const scanError = ref<string | null>(null);
 const busy = ref(false);
-const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; motifLabel?: string } | null>(null);
+const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; motifLabel?: string; reassort?: boolean } | null>(null);
 
 let flashTimer: number | undefined;
 let poll: number | undefined;
@@ -82,6 +82,30 @@ async function onValidate(payload: ValidatePayload) {
     payload.type === 'DLC'
       ? { name, qty: payload.qty, uom, urg: payload.urg }
       : { name, qty: payload.qty, uom, motifLabel: payload.motifLabel };
+  phase.value = 'flash';
+  window.clearTimeout(flashTimer);
+  flashTimer = window.setTimeout(() => {
+    phase.value = 'ready';
+    product.value = null;
+    flashData.value = null;
+  }, 1250);
+}
+
+async function onAddReassort() {
+  if (!product.value) return;
+  const name = product.value.name ?? '';
+  const barcode = product.value.barcode ?? '';
+  const productId = product.value.id;
+  try {
+    await store.addLine({ barcode, productId, type: 'REASSORT' });
+  } catch {
+    scanError.value = "Échec d'ajout au réassort";
+    phase.value = 'ready';
+    product.value = null;
+    return;
+  }
+  beep();
+  flashData.value = { name, qty: 0, reassort: true };
   phase.value = 'flash';
   window.clearTimeout(flashTimer);
   flashTimer = window.setTimeout(() => {
@@ -163,6 +187,7 @@ onUnmounted(() => {
                 v-if="mode === 'stock' && phase === 'entry' && product"
                 :product="product"
                 @again="cancel"
+                @add="onAddReassort"
               />
               <EntryScreen
                 v-else-if="phase === 'entry' && product"
@@ -199,9 +224,10 @@ onUnmounted(() => {
           :uom="flashData.uom"
           :urg="flashData.urg"
           :motif-label="flashData.motifLabel"
+          :reassort="flashData.reassort"
         />
 
-        <div v-if="mode !== 'stock'" class="sc-tabs">
+        <div class="sc-tabs">
           <button :class="['sc-tab', { 'is-on': tab === 'scan' }]" @click="openScan">
             <Icon name="scan" :size="22" /><span class="lbl">Scanner</span>
           </button>

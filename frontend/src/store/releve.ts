@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { api, type Motif, type NewLineRequest, type Product, type RebutResult, type ReleveLineDto } from '../api';
+import { api, type Motif, type NewLineRequest, type Product, type ReleveLineDto } from '../api';
 
 interface State {
   lines: ReleveLineDto[];
@@ -31,7 +31,6 @@ export const useReleveStore = defineStore('releve', {
       total: s.lines.length,
     }),
     rayons: (s) => [...new Set(s.lines.map((l) => l.rayon).filter(Boolean))] as string[],
-    j0Active: (s) => s.lines.filter((l) => l.urgency === 'j0' && !l.sent),
   },
 
   actions: {
@@ -94,12 +93,6 @@ export const useReleveStore = defineStore('releve', {
     async remove(id: number) {
       await api.deleteLine(id);
       await this.fetch();
-    },
-
-    async sendRebut(lineIds?: number[]): Promise<RebutResult> {
-      const res = await api.sendRebut({ lineIds });
-      await this.fetch();
-      return res;
     },
   },
 });

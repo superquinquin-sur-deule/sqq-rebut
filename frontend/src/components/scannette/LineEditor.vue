@@ -36,7 +36,7 @@ function save() {
       <button class="sc-back" @click="emit('back')" aria-label="Retour au relevé">
         <Icon name="arrowLeft" :size="20" />
       </button>
-      <span class="sc-mode-label">Modifier la ligne</span>
+      <span class="sc-mode-label">{{ props.line.type === 'REASSORT' ? 'Réassort' : 'Modifier la ligne' }}</span>
     </div>
 
     <div class="entry-scroll">
@@ -52,11 +52,17 @@ function save() {
       </div>
 
       <div class="edit-tag">
-        <span :class="['urgdot', props.line.urgency]" />
-        <span>{{ URG[props.line.urgency as Urgency].tag }} · {{ fmtShort(parseISO(props.line.dlc as string)) }}</span>
+        <template v-if="props.line.type === 'REASSORT'">
+          <span class="urgdot reassort" />
+          <span>Réassort · {{ props.line.rayon }}</span>
+        </template>
+        <template v-else>
+          <span :class="['urgdot', props.line.urgency]" />
+          <span>{{ URG[props.line.urgency as Urgency].tag }} · {{ fmtShort(parseISO(props.line.dlc as string)) }}</span>
+        </template>
       </div>
 
-      <div>
+      <div v-if="props.line.type !== 'REASSORT'">
         <div class="field-label"><span>Quantité concernée</span></div>
         <WeightInput v-if="byWeight" :grams="grams" @update="grams = $event" />
         <QtyStepper v-else :qty="quantity" @update="quantity = $event" />
@@ -66,7 +72,12 @@ function save() {
     <div v-if="confirming" class="entry-foot">
       <button class="btn btn-ghost btn-md" @click="confirming = false"><Icon name="x" :size="18" />Annuler</button>
       <button class="btn btn-danger btn-md btn-block" @click="emit('delete')">
-        <Icon name="trash" :size="18" />Supprimer la ligne
+        <Icon name="trash" :size="18" />{{ props.line.type === 'REASSORT' ? 'Retirer du réassort' : 'Supprimer la ligne' }}
+      </button>
+    </div>
+    <div v-else-if="props.line.type === 'REASSORT'" class="entry-foot">
+      <button class="btn btn-danger btn-md btn-block" @click="confirming = true">
+        <Icon name="trash" :size="18" />Retirer du réassort
       </button>
     </div>
     <div v-else class="entry-foot">

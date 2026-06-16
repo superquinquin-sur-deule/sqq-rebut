@@ -69,16 +69,17 @@ public class ReleveService {
         if (req == null || (!hasBarcode && !hasProductId)) {
             throw new BadRequestException("Identifiant produit manquant (code-barres ou productId)");
         }
-        if (!Double.isFinite(req.qty()) || req.qty() <= 0) {
+        LineType type = parseType(req.type());
+        // Le réassort est une simple liste de produits à remonter de la réserve : pas de quantité.
+        if (type != LineType.REASSORT && (!Double.isFinite(req.qty()) || req.qty() <= 0)) {
             throw new BadRequestException("Quantité invalide");
         }
-        LineType type = parseType(req.type());
         Motif motif = null;
         if (type == LineType.DLC) {
             if (req.dlc() == null) {
                 throw new BadRequestException("DLC manquante");
             }
-        } else {
+        } else if (type == LineType.PERTE) {
             if (req.motifId() == null) {
                 throw new BadRequestException("Motif manquant");
             }
@@ -102,6 +103,14 @@ public class ReleveService {
                 existing.qty = round3(existing.qty + req.qty());
                 return ReleveLineDto.from(existing, LocalDate.now());
             }
+        } else if (type == LineType.REASSORT) {
+            ReleveLine existing = ReleveLine.find(
+                    "releve = ?1 and productId = ?2 and type = ?3 and sent = false",
+                    releve, p.id(), LineType.REASSORT).firstResult();
+            if (existing != null) {
+                // Déjà dans la liste réassort : ré-ajouter est sans effet (pas de quantité à cumuler).
+                return ReleveLineDto.from(existing, LocalDate.now());
+            }
         }
 
         ReleveLine l = new ReleveLine();
@@ -115,11 +124,11 @@ public class ReleveService {
         l.type = type;
         if (type == LineType.DLC) {
             l.dlc = req.dlc();
-        } else {
+        } else if (type == LineType.PERTE) {
             l.motifId = motif.id();
             l.motifLabel = motif.label();
         }
-        l.qty = round3(req.qty());
+        l.qty = type == LineType.REASSORT ? 1 : round3(req.qty());
         l.sent = false;
         l.persist();
         if (type == LineType.PERTE) {

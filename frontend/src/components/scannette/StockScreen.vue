@@ -5,7 +5,7 @@ import { isWeightUom } from '../../lib/qty';
 import type { Product } from '../../api';
 
 const props = defineProps<{ product: Product }>();
-const emit = defineEmits<{ (e: 'again'): void }>();
+const emit = defineEmits<{ (e: 'again'): void; (e: 'add'): void }>();
 
 const stockLabel = computed(() => {
   const q = props.product.qtyAvailable ?? 0;
@@ -36,8 +36,11 @@ const stockLabel = computed(() => {
       </div>
     </div>
 
-    <div class="entry-foot">
-      <button class="btn btn-primary btn-md btn-block" @click="emit('again')">
+    <div class="entry-foot entry-foot-stack">
+      <button class="btn btn-primary btn-md btn-block" @click="emit('add')">
+        <Icon name="plus" :size="18" />Ajouter au réassort
+      </button>
+      <button class="btn btn-ghost btn-md btn-block" @click="emit('again')">
         <Icon name="scan" :size="18" />Scanner un autre produit
       </button>
     </div>

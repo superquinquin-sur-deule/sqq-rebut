@@ -10,10 +10,12 @@ const emit = defineEmits<{ (e: 'select', line: ReleveLineDto): void }>();
 const sorted = computed(() => [...props.lines].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)));
 const groups = computed(() => {
   const sent = sorted.value.filter((l) => l.sent);
-  const active = sorted.value.filter((l) => !l.sent);
+  const reassort = sorted.value.filter((l) => !l.sent && l.type === 'REASSORT');
+  const dlc = sorted.value.filter((l) => !l.sent && l.type !== 'REASSORT');
   return [
     { key: 'sent', title: 'Envoyé au rebut', lines: sent },
-    { key: 'active', title: 'Suivi DLC', lines: active },
+    { key: 'reassort', title: 'Réassort', lines: reassort },
+    { key: 'dlc', title: 'Suivi DLC', lines: dlc },
   ].filter((g) => g.lines.length);
 });
 </script>
@@ -37,13 +39,14 @@ const groups = computed(() => {
         :class="['sess-line', { 'is-sent': l.sent }]"
         @click="!l.sent && emit('select', l)"
       >
-        <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.urgency]" />
+        <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.type === 'REASSORT' ? 'reassort' : l.urgency]" />
         <div class="nm">
           <b>{{ l.name }}</b>
           <span v-if="l.type === 'PERTE'">{{ l.motifLabel }} · {{ l.rayon }}</span>
+          <span v-else-if="l.type === 'REASSORT'">Réassort · {{ l.rayon }}</span>
           <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
         </div>
-        <span class="q">{{ fmtQty(l.qty, l.uom) }}</span>
+        <span v-if="l.type !== 'REASSORT'" class="q">{{ fmtQty(l.qty, l.uom) }}</span>
         <Icon v-if="l.sent" name="checkCircle" :size="18" class="sess-sent" />
         <Icon v-else name="chevR" :size="18" class="sess-chev" />
       </component>

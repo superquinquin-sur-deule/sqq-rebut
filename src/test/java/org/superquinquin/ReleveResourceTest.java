@@ -192,6 +192,64 @@ class ReleveResourceTest {
     }
 
     @Test
+    void addReassortLineWithoutQtyNeverScraps() {
+        // Le réassort est une simple liste de produits : pas de quantité dans la requête.
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "REASSORT"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("type", is("REASSORT"))
+                .body("urgency", nullValue())
+                .body("dlc", nullValue())
+                .body("motifLabel", nullValue())
+                .body("qty", is(1.0f)) // qté fixée à 1 en interne (colonne non-null), jamais affichée
+                .body("sent", is(false)) // jamais envoyé au rebut : le réassort est une liste interne
+                .body("scrapRef", nullValue());
+    }
+
+    @Test
+    void addReassortSameProductIsNoOp() {
+        int id1 = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "REASSORT"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        // Re-scanner le même produit ne crée pas de doublon et ne cumule aucune quantité.
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "REASSORT"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(1.0f));
+    }
+
+    @Test
+    void deleteReassortLine() {
+        int id = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "REASSORT"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+        given().when().delete("/api/releve/lines/" + id)
+                .then().statusCode(204);
+    }
+
+    @Test
+    void rebutIgnoresReassortLines() {
+        int id = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "REASSORT"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+
+        given().contentType(JSON).body(Map.of("lineIds", java.util.List.of(id)))
+                .when().post("/api/releve/rebut")
+                .then().statusCode(200)
+                .body("created", is(0));
+    }
+
+    @Test
     void addLineByProductIdWithoutBarcode() {
         given().contentType(JSON)
                 .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,

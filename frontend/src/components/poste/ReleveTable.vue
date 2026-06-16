@@ -6,23 +6,11 @@ import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{
   lines: ReleveLineDto[];
-  sortable?: boolean;
-  sortKey?: string;
-  sortDir?: 'asc' | 'desc';
 }>();
 const emit = defineEmits<{
   (e: 'qty', id: number, qty: number): void;
   (e: 'delete', id: number): void;
-  (e: 'sort', key: string): void;
 }>();
-
-const cols = [
-  { id: 'name', label: 'Produit' },
-  { id: 'rayon', label: 'Rayon' },
-  { id: 'urg', label: 'DLC / Motif' },
-  { id: 'qty', label: 'Quantité' },
-];
-const arrow = (id: string) => (props.sortKey === id ? (props.sortDir === 'asc' ? '▲' : '▼') : '↕');
 
 function onWeight(id: number, e: Event) {
   const input = e.target as HTMLInputElement;
@@ -45,19 +33,7 @@ function onWeight(id: number, e: Event) {
       <col style="width:12%" />
     </colgroup>
     <thead>
-      <tr v-if="props.sortable">
-        <th
-          v-for="c in cols"
-          :key="c.id"
-          class="sortable"
-          :class="{ 'is-sorted': props.sortKey === c.id }"
-          @click="emit('sort', c.id)"
-        >
-          {{ c.label }}<span class="sortarrow">{{ arrow(c.id) }}</span>
-        </th>
-        <th style="text-align:right">Action</th>
-      </tr>
-      <tr v-else>
+      <tr>
         <th>Produit</th><th>Rayon</th><th>DLC / Motif</th><th>Quantité</th><th style="text-align:right">Action</th>
       </tr>
     </thead>
@@ -70,13 +46,15 @@ function onWeight(id: number, e: Event) {
         <td><span class="td-rayon">{{ l.rayon }}</span></td>
         <td>
           <span v-if="l.type === 'PERTE'" class="td-urg perte"><span class="dot" />{{ l.motifLabel }}</span>
+          <span v-else-if="l.type === 'REASSORT'" class="td-urg reassort"><span class="dot" />Réassort</span>
           <template v-else>
             <span class="td-urg" :class="l.urgency"><span class="dot" />{{ URG[l.urgency as Urgency].tag }}</span>
             <div class="td-urg date" style="margin-top:3px">{{ fmtShort(parseISO(l.dlc as string)) }}</div>
           </template>
         </td>
         <td>
-          <b v-if="l.sent" style="font-family:var(--font-display);font-size:15px">{{ fmtQty(l.qty, l.uom) }}</b>
+          <span v-if="l.type === 'REASSORT'" class="td-rayon">—</span>
+          <b v-else-if="l.sent" style="font-family:var(--font-display);font-size:15px">{{ fmtQty(l.qty, l.uom) }}</b>
           <div v-else-if="isWeightUom(l.uom)" class="dk-qty dk-weight">
             <input type="number" step="0.001" min="0.001" :value="l.qty" @change="onWeight(l.id!, $event)" />
             <span>kg</span>

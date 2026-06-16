@@ -639,6 +639,9 @@ input, select {
     display: flex;
     gap: 10px;
 }
+.entry-foot-stack {
+    flex-direction: column;
+}
 
 .prod-card {
     background: #fff;
@@ -1552,24 +1555,6 @@ button.sess-line:active {
     user-select: none;
 }
 
-.dk-table thead th.sortable {
-    cursor: pointer;
-}
-
-.dk-table thead th.sortable:hover {
-    color: var(--sqq-brown);
-}
-
-.dk-table thead th .sortarrow {
-    opacity: 0.4;
-    margin-left: 5px;
-}
-
-.dk-table thead th.is-sorted .sortarrow {
-    opacity: 1;
-    color: var(--sqq-brown);
-}
-
 .dk-table tbody td {
     padding: 12px 16px;
     border-bottom: 1px solid var(--sqq-line);
@@ -2253,5 +2238,20 @@ button.sess-line:active {
 
 .dk-group-head .pill.perte {
     background: var(--sqq-teal);
+    color: #fff;
+}
+
+/* ── Puce/pastille « réassort » (brun) — même identité que le mode Stock ── */
+.urgdot.reassort {
+    background: var(--sqq-brown);
+}
+.td-urg.reassort {
+    color: var(--sqq-brown);
+}
+.td-urg.reassort .dot {
+    background: var(--sqq-brown);
+}
+.dk-group-head .pill.reassort {
+    background: var(--sqq-brown);
     color: #fff;
 }
