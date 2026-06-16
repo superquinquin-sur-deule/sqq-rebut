@@ -1,5 +1,6 @@
 package org.superquinquin.releve;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -209,7 +210,16 @@ public class ReleveService {
             l.scrapRef = "DRY-RUN";
         } else {
             int scrapId = odoo.create("stock.scrap", scrapValues(l));
-            odoo.callButton("stock.scrap", List.of(scrapId), "action_validate");
+            JsonNode result = odoo.callButton("stock.scrap", List.of(scrapId), "action_validate");
+            // Stock insuffisant (typique des fruits/légumes dont le stock n'est pas saisi) :
+            // action_validate ne valide pas, il renvoie le wizard « quantité insuffisante » (un
+            // objet, pas `true`) et laisse le scrap en brouillon. On force alors la validation via
+            // do_scrap — l'équivalent du bouton « Confirmer » du wizard — sinon la perte n'est
+            // jamais enregistrée dans Odoo.
+            if (result != null && result.isObject()) {
+                odoo.callButton("stock.scrap", List.of(scrapId), "do_scrap");
+                Log.infof("[REBUT] stock.scrap #%d : stock insuffisant, validation forcée (do_scrap)", scrapId);
+            }
             l.scrapRef = String.valueOf(scrapId);
             Log.infof("[REBUT] stock.scrap #%d validé pour %s (x%s)", scrapId, l.name, l.qty);
         }

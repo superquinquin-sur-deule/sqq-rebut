@@ -21,6 +21,10 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
     public static final String KNOWN_QUERY = "saucisse";
     public static final long NO_BARCODE_PRODUCT_ID = 51000;
     public static final String NO_BARCODE_QUERY = "salade";
+    // Origine « Pertes Fruits et légumes » : utilisée comme déclencheur du scénario « stock
+    // insuffisant » dans les stubs (le stock des F&L n'est pas saisi dans Odoo).
+    public static final int INSUFFICIENT_STOCK_ORIGIN_ID = 11;
+    public static final int INSUFFICIENT_STOCK_SCRAP_ID = 8888;
 
     private WireMockServer server;
 
@@ -142,6 +146,15 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                         + "{\"id\":9,\"name\":\"Consommable\"},"
                         + "{\"id\":11,\"name\":\"Pertes Fruits et légumes\"}]}")));
 
+        // stock.scrap create — origine 11 (« Pertes Fruits et légumes ») → id distinct, sert à
+        // simuler le cas « stock insuffisant » (le stock des F&L n'est pas saisi dans Odoo).
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(1)
+                .withRequestBody(containing("stock.scrap"))
+                .withRequestBody(containing("\"create\""))
+                .withRequestBody(containing("\"scrap_origin_id\":" + INSUFFICIENT_STOCK_ORIGIN_ID))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":" + INSUFFICIENT_STOCK_SCRAP_ID + "}")));
+
         // stock.scrap create → id
         server.stubFor(post(urlEqualTo("/jsonrpc"))
                 .atPriority(2)
@@ -149,10 +162,27 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                 .withRequestBody(containing("\"create\""))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":9999}")));
 
-        // action_validate → true
+        // action_validate sur le scrap « stock insuffisant » → wizard quantité insuffisante (un
+        // objet, pas `true`) : Odoo laisse le scrap en brouillon tant qu'on ne confirme pas.
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(1)
+                .withRequestBody(containing("action_validate"))
+                .withRequestBody(containing(String.valueOf(INSUFFICIENT_STOCK_SCRAP_ID)))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":{"
+                        + "\"type\":\"ir.actions.act_window\","
+                        + "\"res_model\":\"stock.warn.insufficient.qty.scrap\","
+                        + "\"target\":\"new\"}}")));
+
+        // action_validate → true (stock suffisant : Odoo valide directement)
         server.stubFor(post(urlEqualTo("/jsonrpc"))
                 .atPriority(2)
                 .withRequestBody(containing("action_validate"))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":true}")));
+
+        // do_scrap → true (forçage de la validation après le wizard)
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(2)
+                .withRequestBody(containing("do_scrap"))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":true}")));
 
         return Map.of("odoo.url", server.baseUrl());

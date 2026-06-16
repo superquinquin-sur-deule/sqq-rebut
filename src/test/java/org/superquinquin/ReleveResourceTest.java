@@ -128,6 +128,42 @@ class ReleveResourceTest {
     }
 
     @Test
+    void scrapForcesValidationWhenStockInsufficient() {
+        // Fruits/légumes : le stock n'est pas saisi dans Odoo, donc action_validate renvoie le
+        // wizard « quantité insuffisante » et laisse le scrap en brouillon. Le service doit forcer
+        // la validation via do_scrap pour que la perte soit bien enregistrée.
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE",
+                        "motifId", WireMockOdooResource.INSUFFICIENT_STOCK_ORIGIN_ID, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("sent", is(true))
+                .body("scrapRef", is(String.valueOf(WireMockOdooResource.INSUFFICIENT_STOCK_SCRAP_ID)));
+
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("do_scrap"))
+                .withRequestBody(containing(String.valueOf(WireMockOdooResource.INSUFFICIENT_STOCK_SCRAP_ID))));
+    }
+
+    @Test
+    void scrapDoesNotForceWhenStockSufficient() {
+        // Stock suffisant : action_validate renvoie true, aucun do_scrap ne doit être émis.
+        // Le journal WireMock est partagé sur toute la classe : on le réinitialise pour pouvoir
+        // affirmer « zéro do_scrap » sans compter ceux des autres tests.
+        wiremock.resetRequests();
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
+                        "type", "PERTE", "motifId", 8, "qty", 2))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("sent", is(true))
+                .body("scrapRef", is("9999"));
+
+        wiremock.verify(0, postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("do_scrap")));
+    }
+
+    @Test
     void updateOrDeleteSentLineReturns400() {
         int id = given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
