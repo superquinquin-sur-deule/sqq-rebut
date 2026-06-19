@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.14.0...v0.15.0) (2026-06-19)
+
+
+### Features
+
+* change scanning behavior for pertes & reassort ([c5578ef](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/c5578efdf05f3937e7314c7ece1e94a6dd12e0cf))
+
 ## [0.14.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.13.0...v0.14.0) (2026-06-16)
 
 
