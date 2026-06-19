@@ -530,6 +530,65 @@ input, select {
     line-height: 1.45;
 }
 
+/* bandeau « dernier produit ajouté » en scan-en-rafale (pertes / réassort) */
+.scan-last {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    max-width: 280px;
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: var(--sqq-cream);
+    border: 1.5px solid var(--sqq-line);
+    animation: pop 0.2s ease-out;
+}
+
+.scan-last-ic {
+    color: var(--sqq-teal);
+    flex-shrink: 0;
+}
+
+.scan-last-info {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.scan-last-info b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--sqq-brown);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scan-last-info span {
+    font-size: 11.5px;
+    color: var(--sqq-brown-soft);
+}
+
+.scan-last-count {
+    flex-shrink: 0;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 7px;
+    border-radius: 13px;
+    background: var(--sqq-brown);
+    color: var(--sqq-yellow);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .scan-trigger-hint {
     display: flex;
     align-items: center;
@@ -1058,6 +1117,13 @@ input, select {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.sess-rebut {
+    flex-shrink: 0;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--sqq-line);
+    background: var(--sqq-paper);
 }
 
 .sess-group-head {
@@ -1824,12 +1890,29 @@ button.sess-line:active {
 }
 
 .modal-foot {
-    padding: 16px 22px;
+    padding: 16px 22px calc(16px + env(safe-area-inset-bottom));
     border-top: 1px solid var(--sqq-line);
     display: flex;
-    justify-content: flex-end;
+    /* Mobile : boutons empilés pleine largeur (action principale en haut) — sinon les libellés
+       en nowrap débordent de la modale étroite et « Annuler » se fait rogner à gauche. */
+    flex-direction: column-reverse;
     gap: 10px;
     background: #fff;
+}
+
+.modal-foot .btn {
+    width: 100%;
+}
+
+@media (min-width: 480px) {
+    .modal-foot {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+
+    .modal-foot .btn {
+        width: auto;
+    }
 }
 
 .recap-line {

@@ -3,9 +3,11 @@ package org.superquinquin;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
@@ -28,6 +30,14 @@ class ReleveResourceTest {
     private int addLine(LocalDate dlc, int qty) {
         return given().contentType(JSON)
                 .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "dlc", dlc.toString(), "qty", qty))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .extract().path("id");
+    }
+
+    private int addPerte(String barcode) {
+        return given().contentType(JSON)
+                .body(Map.of("barcode", barcode, "type", "PERTE"))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
                 .extract().path("id");
@@ -86,21 +96,54 @@ class ReleveResourceTest {
     }
 
     @Test
-    void addPerteLineScrapsImmediatelyWithChosenMotif() {
+    void addPerteLineDoesNotScrapAtAdd() {
+        // Nouveau fonctionnement : on enchaîne les scans de pertes sans motif et sans envoi au
+        // rebut. La ligne reste en attente (sent=false) jusqu'au rebut groupé.
         given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 8, "qty", 2))
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE"))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
                 .body("type", is("PERTE"))
-                .body("motifLabel", is("Casse"))
+                .body("motifLabel", nullValue())
                 .body("urgency", nullValue())
                 .body("dlc", nullValue())
-                .body("qty", is(2.0f))
-                .body("sent", is(true))
-                .body("scrapRef", is("9999"));
+                .body("sent", is(false))
+                .body("scrapRef", nullValue());
+    }
 
-        // le scrap part dès l'ajout, avec l'origine = le motif choisi (8)
+    @Test
+    void addPerteMergesSameProduct() {
+        // Rescanner le même produit cumule la quantité sur la même ligne (pas de doublon).
+        // État DB partagé sur la classe : on raisonne en relatif par rapport à la 1re quantité.
+        Response r1 = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("sent", is(false))
+                .extract().response();
+        int id1 = r1.path("id");
+        float q1 = r1.path("qty");
+
+        given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE"))
+                .when().post("/api/releve/lines")
+                .then().statusCode(200)
+                .body("id", is(id1))
+                .body("qty", is(q1 + 1.0f));
+    }
+
+    @Test
+    void rebutScrapsPerteWithChosenMotif() {
+        int id = addPerte(WireMockOdooResource.KNOWN_BARCODE);
+
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
+                .when().post("/api/releve/rebut")
+                .then().statusCode(200)
+                .body("created", is(1))
+                .body("lines[0].sent", is(true))
+                .body("lines[0].motifLabel", is("Casse"));
+
+        // L'origine du scrap = le motif unique choisi au rebut (8 « Casse »).
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("\"scrap_origin_id\":8")));
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
@@ -108,37 +151,19 @@ class ReleveResourceTest {
     }
 
     @Test
-    void addPerteNeverMerges() {
-        int id1 = given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 11, "qty", 2))
-                .when().post("/api/releve/lines")
-                .then().statusCode(200)
-                .body("sent", is(true))
-                .extract().path("id");
-
-        given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 11, "qty", 3))
-                .when().post("/api/releve/lines")
-                .then().statusCode(200)
-                .body("id", not(id1))
-                .body("qty", is(3.0f))
-                .body("sent", is(true));
-    }
-
-    @Test
-    void scrapForcesValidationWhenStockInsufficient() {
+    void rebutForcesValidationWhenStockInsufficient() {
         // Fruits/légumes : le stock n'est pas saisi dans Odoo, donc action_validate renvoie le
         // wizard « quantité insuffisante » et laisse le scrap en brouillon. Le service doit forcer
         // la validation via do_scrap pour que la perte soit bien enregistrée.
+        int id = addPerte(WireMockOdooResource.KNOWN_BARCODE);
+
         given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE",
-                        "motifId", WireMockOdooResource.INSUFFICIENT_STOCK_ORIGIN_ID, "qty", 2))
-                .when().post("/api/releve/lines")
+                .body(Map.of("lineIds", List.of(id), "motifId", WireMockOdooResource.INSUFFICIENT_STOCK_ORIGIN_ID))
+                .when().post("/api/releve/rebut")
                 .then().statusCode(200)
-                .body("sent", is(true))
-                .body("scrapRef", is(String.valueOf(WireMockOdooResource.INSUFFICIENT_STOCK_SCRAP_ID)));
+                .body("created", is(1))
+                .body("lines[0].sent", is(true))
+                .body("lines[0].scrapRef", is(String.valueOf(WireMockOdooResource.INSUFFICIENT_STOCK_SCRAP_ID)));
 
         wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("do_scrap"))
@@ -146,18 +171,19 @@ class ReleveResourceTest {
     }
 
     @Test
-    void scrapDoesNotForceWhenStockSufficient() {
+    void rebutDoesNotForceWhenStockSufficient() {
         // Stock suffisant : action_validate renvoie true, aucun do_scrap ne doit être émis.
-        // Le journal WireMock est partagé sur toute la classe : on le réinitialise pour pouvoir
-        // affirmer « zéro do_scrap » sans compter ceux des autres tests.
+        // Le journal WireMock est partagé sur toute la classe : on le réinitialise juste avant le
+        // rebut ciblé pour pouvoir affirmer « zéro do_scrap » sans compter ceux des autres tests.
+        int id = addPerte(WireMockOdooResource.KNOWN_BARCODE);
+
         wiremock.resetRequests();
-        given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 8, "qty", 2))
-                .when().post("/api/releve/lines")
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
+                .when().post("/api/releve/rebut")
                 .then().statusCode(200)
-                .body("sent", is(true))
-                .body("scrapRef", is("9999"));
+                .body("created", is(1))
+                .body("lines[0].sent", is(true))
+                .body("lines[0].scrapRef", is("9999"));
 
         wiremock.verify(0, postRequestedFor(urlEqualTo("/jsonrpc"))
                 .withRequestBody(containing("do_scrap")));
@@ -165,12 +191,11 @@ class ReleveResourceTest {
 
     @Test
     void updateOrDeleteSentLineReturns400() {
-        int id = given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 8, "qty", 2))
-                .when().post("/api/releve/lines")
+        int id = addPerte(WireMockOdooResource.KNOWN_BARCODE);
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
+                .when().post("/api/releve/rebut")
                 .then().statusCode(200)
-                .extract().path("id");
+                .body("lines[0].sent", is(true));
 
         given().contentType(JSON).body(Map.of("qty", 5))
                 .when().put("/api/releve/lines/" + id)
@@ -203,28 +228,34 @@ class ReleveResourceTest {
     }
 
     @Test
-    void addPerteWithoutMotifReturns400() {
-        given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE", "qty", 1))
-                .when().post("/api/releve/lines")
+    void rebutWithoutMotifReturns400() {
+        // Le motif est désormais obligatoire et unique pour toute la liste, choisi au rebut.
+        int id = addPerte(WireMockOdooResource.KNOWN_BARCODE);
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id)))
+                .when().post("/api/releve/rebut")
                 .then().statusCode(400);
     }
 
     @Test
-    void rebutIgnoresPerteLines() {
+    void rebutPerteByProductIdWithoutBarcode() {
         int id = given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "type", "PERTE", "motifId", 9, "qty", 1))
+                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID, "type", "PERTE"))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
-                .body("sent", is(true))
+                .body("type", is("PERTE"))
+                .body("barcode", nullValue())
+                .body("sent", is(false))
                 .extract().path("id");
 
-        // la ligne est déjà partie au rebut à l'ajout : l'endpoint rebut ne la reprend pas
-        given().contentType(JSON).body(Map.of("lineIds", java.util.List.of(id)))
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
                 .when().post("/api/releve/rebut")
                 .then().statusCode(200)
-                .body("created", is(0));
+                .body("lines[0].sent", is(true))
+                .body("lines[0].scrapRef", is("9999"));
+
+        // le scrap est créé par product_id, sans code-barres
+        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
+                .withRequestBody(containing("\"product_id\":" + WireMockOdooResource.NO_BARCODE_PRODUCT_ID)));
     }
 
     @Test
@@ -279,7 +310,8 @@ class ReleveResourceTest {
                 .then().statusCode(200)
                 .extract().path("id");
 
-        given().contentType(JSON).body(Map.of("lineIds", java.util.List.of(id)))
+        // Même avec un motif, le rebut ne touche que les pertes : le réassort est ignoré.
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
                 .when().post("/api/releve/rebut")
                 .then().statusCode(200)
                 .body("created", is(0));
@@ -325,31 +357,21 @@ class ReleveResourceTest {
     }
 
     @Test
-    void addPerteByProductIdScrapsWithoutBarcode() {
-        given().contentType(JSON)
-                .body(Map.of("productId", WireMockOdooResource.NO_BARCODE_PRODUCT_ID,
-                        "type", "PERTE", "motifId", 8, "qty", 1))
+    void rebutScrapsPerteWithBasicAuth() {
+        // Purge d'éventuelles pertes laissées par d'autres tests (état DB partagé dans la classe),
+        // pour que la ligne ajoutée ensuite soit neuve et porte exactement le poids décimal testé.
+        given().contentType(JSON).body(Map.of("motifId", 8))
+                .when().post("/api/releve/rebut").then().statusCode(200);
+
+        int id = given().contentType(JSON)
+                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE, "type", "PERTE", "qty", 1.234))
                 .when().post("/api/releve/lines")
                 .then().statusCode(200)
-                .body("type", is("PERTE"))
-                .body("barcode", nullValue())
-                .body("sent", is(true))
-                .body("scrapRef", is("9999"));
+                .body("qty", is(1.234f))
+                .extract().path("id");
 
-        // le scrap est créé par product_id, sans code-barres
-        wiremock.verify(postRequestedFor(urlEqualTo("/jsonrpc"))
-                .withRequestBody(containing("\"product_id\":" + WireMockOdooResource.NO_BARCODE_PRODUCT_ID)));
-    }
-
-    @Test
-    void rebutJ0CreatesAndValidatesScrapWithBasicAuth() {
-        given().contentType(JSON)
-                .body(Map.of("barcode", WireMockOdooResource.KNOWN_BARCODE,
-                        "dlc", LocalDate.now().toString(), "qty", 1.234)) // j0, poids décimal
-                .when().post("/api/releve/lines")
-                .then().statusCode(200);
-
-        given().contentType(JSON).body("{}")
+        wiremock.resetRequests();
+        given().contentType(JSON).body(Map.of("lineIds", List.of(id), "motifId", 8))
                 .when().post("/api/releve/rebut")
                 .then().statusCode(200)
                 .body("dryRun", is(false))

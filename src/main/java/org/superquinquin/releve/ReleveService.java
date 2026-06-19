@@ -71,21 +71,14 @@ public class ReleveService {
             throw new BadRequestException("Identifiant produit manquant (code-barres ou productId)");
         }
         LineType type = parseType(req.type());
-        // Le réassort est une simple liste de produits à remonter de la réserve : pas de quantité.
-        if (type != LineType.REASSORT && (!Double.isFinite(req.qty()) || req.qty() <= 0)) {
+        // DLC : quantité obligatoire. Pertes : on enchaîne les scans sans saisir de quantité,
+        // donc défaut 1 (cumulé au rescan). Réassort : simple liste, pas de quantité.
+        if (type == LineType.DLC && (!Double.isFinite(req.qty()) || req.qty() <= 0)) {
             throw new BadRequestException("Quantité invalide");
         }
-        Motif motif = null;
-        if (type == LineType.DLC) {
-            if (req.dlc() == null) {
-                throw new BadRequestException("DLC manquante");
-            }
-        } else if (type == LineType.PERTE) {
-            if (req.motifId() == null) {
-                throw new BadRequestException("Motif manquant");
-            }
-            motif = motifs.byId(req.motifId())
-                    .orElseThrow(() -> new BadRequestException("Motif inconnu: " + req.motifId()));
+        double perteQty = (Double.isFinite(req.qty()) && req.qty() > 0) ? req.qty() : 1;
+        if (type == LineType.DLC && req.dlc() == null) {
+            throw new BadRequestException("DLC manquante");
         }
 
         Product p = (hasBarcode ? products.findByBarcode(req.barcode())
@@ -102,6 +95,15 @@ public class ReleveService {
                     releve, p.id(), LineType.DLC, req.dlc()).firstResult();
             if (existing != null) {
                 existing.qty = round3(existing.qty + req.qty());
+                return ReleveLineDto.from(existing, LocalDate.now());
+            }
+        } else if (type == LineType.PERTE) {
+            ReleveLine existing = ReleveLine.find(
+                    "releve = ?1 and productId = ?2 and type = ?3 and sent = false",
+                    releve, p.id(), LineType.PERTE).firstResult();
+            if (existing != null) {
+                // Pertes : on enchaîne les scans, rescanner le même produit cumule la quantité.
+                existing.qty = round3(existing.qty + perteQty);
                 return ReleveLineDto.from(existing, LocalDate.now());
             }
         } else if (type == LineType.REASSORT) {
@@ -125,16 +127,15 @@ public class ReleveService {
         l.type = type;
         if (type == LineType.DLC) {
             l.dlc = req.dlc();
-        } else if (type == LineType.PERTE) {
-            l.motifId = motif.id();
-            l.motifLabel = motif.label();
         }
-        l.qty = type == LineType.REASSORT ? 1 : round3(req.qty());
+        // Pertes : le motif est choisi globalement au moment du rebut, pas à l'ajout.
+        l.qty = switch (type) {
+            case REASSORT -> 1;
+            case PERTE -> round3(perteQty);
+            default -> round3(req.qty());
+        };
         l.sent = false;
         l.persist();
-        if (type == LineType.PERTE) {
-            scrapLine(l);
-        }
         return ReleveLineDto.from(l, LocalDate.now());
     }
 
@@ -185,17 +186,25 @@ public class ReleveService {
     }
 
     @Transactional
-    public RebutResult sendRebut(List<Long> ids) {
+    public RebutResult sendRebut(List<Long> ids, Long motifId) {
+        if (motifId == null) {
+            throw new BadRequestException("Motif manquant");
+        }
+        Motif motif = motifs.byId(motifId)
+                .orElseThrow(() -> new BadRequestException("Motif inconnu: " + motifId));
         LocalDate today = LocalDate.now();
         List<ReleveLine> candidates = (ids != null && !ids.isEmpty())
                 ? ReleveLine.list("id in ?1", ids)
                 : ReleveLine.list("releve.date", today);
+        // Un seul motif pour toute la liste : on l'applique à chaque perte avant de la scraper.
         List<ReleveLine> targets = candidates.stream()
-                .filter(l -> !l.sent && l.type == LineType.DLC && Urgency.of(l.dlc, today) == Urgency.J0)
+                .filter(l -> !l.sent && l.type == LineType.PERTE)
                 .toList();
 
         List<ReleveLineDto> done = new ArrayList<>();
         for (ReleveLine l : targets) {
+            l.motifId = motif.id();
+            l.motifLabel = motif.label();
             scrapLine(l);
             done.add(ReleveLineDto.from(l, today));
         }

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import Icon from '../components/Icon.vue';
 import ReleveTable from '../components/poste/ReleveTable.vue';
+import RebutMotifModal from '../components/scannette/RebutMotifModal.vue';
 import { useReleveStore } from '../store/releve';
 import { URG, fmtLong, parseISO, type Urgency } from '../lib/dates';
 import logo from '../assets/sqq-logo.svg';
@@ -14,6 +15,8 @@ const typeFilter = ref<'all' | 'DLC' | 'PERTE' | 'REASSORT'>('all');
 const rayonFilter = ref('all');
 const query = ref('');
 const toastMsg = ref<string | null>(null);
+const rebutModalOpen = ref(false);
+const rebutBusy = ref(false);
 
 let toastTimer: number | undefined;
 let poll: number | undefined;
@@ -47,6 +50,8 @@ const reassortLines = computed(() =>
   filtered.value.filter((l) => l.type === 'REASSORT').slice().sort((a, b) => Number(a.sent) - Number(b.sent)),
 );
 
+const unsentPerte = computed(() => perteLines.value.filter((l) => !l.sent));
+
 const showDlc = computed(() => typeFilter.value === 'all' || typeFilter.value === 'DLC');
 const showPerte = computed(() => typeFilter.value === 'all' || typeFilter.value === 'PERTE');
 const showReassort = computed(() => typeFilter.value === 'all' || typeFilter.value === 'REASSORT');
@@ -75,6 +80,24 @@ async function refresh() {
   toast('Relevé actualisé');
 }
 
+async function doRebut(motifId: number) {
+  const ids = unsentPerte.value.map((l) => l.id).filter((id): id is number => id != null);
+  if (!ids.length) {
+    rebutModalOpen.value = false;
+    return;
+  }
+  rebutBusy.value = true;
+  try {
+    const r = await store.rebut(motifId, ids);
+    toast(`${r.created} perte${r.created > 1 ? 's' : ''} envoyée${r.created > 1 ? 's' : ''} au rebut`);
+  } catch {
+    toast("Échec de l'envoi au rebut");
+  } finally {
+    rebutBusy.value = false;
+    rebutModalOpen.value = false;
+  }
+}
+
 watch(
   () => route.params.releveId,
   (id) => {
@@ -83,6 +106,7 @@ watch(
   { immediate: true },
 );
 onMounted(() => {
+  store.fetchMotifs();
   poll = window.setInterval(() => store.fetch(), 5000);
 });
 onUnmounted(() => {
@@ -154,6 +178,14 @@ onUnmounted(() => {
                 <span style="width:7px;height:7px;border-radius:50%;background:currentColor" />Pertes
               </span>
               <span class="line" />
+              <button
+                v-if="unsentPerte.length"
+                class="btn btn-danger btn-sm"
+                :disabled="rebutBusy"
+                @click="rebutModalOpen = true"
+              >
+                <Icon name="trash" :size="16" />Envoyer au rebut · {{ unsentPerte.length }}
+              </button>
             </div>
             <ReleveTable :lines="perteLines" @qty="setQty" @delete="del" />
           </div>
@@ -170,6 +202,14 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <RebutMotifModal
+      v-if="rebutModalOpen"
+      :motifs="store.motifs"
+      :count="unsentPerte.length"
+      :busy="rebutBusy"
+      @confirm="doRebut"
+      @close="rebutModalOpen = false"
+    />
     <div v-if="toastMsg" class="toast"><Icon name="checkCircle" :size="18" />{{ toastMsg }}</div>
   </div>
 </template>

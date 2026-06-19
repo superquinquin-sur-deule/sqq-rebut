@@ -4,7 +4,13 @@ import Icon from '../Icon.vue';
 import ProductSearchModal from './ProductSearchModal.vue';
 import type { Product } from '../../api';
 
-const props = defineProps<{ mode: 'dlc' | 'perte' | 'stock'; error?: string | null; busy?: boolean }>();
+const props = defineProps<{
+  mode: 'dlc' | 'perte' | 'stock';
+  error?: string | null;
+  busy?: boolean;
+  last?: { name: string; detail: string } | null;
+  count?: number;
+}>();
 const emit = defineEmits<{ (e: 'scanned', code: string): void; (e: 'picked', product: Product): void }>();
 
 const code = ref('');
@@ -78,14 +84,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
       </div>
       <div class="laser" />
     </div>
+    <div v-if="props.last" class="scan-last">
+      <Icon name="checkCircle" :size="22" class="scan-last-ic" />
+      <div class="scan-last-info">
+        <b>{{ props.last.name }}</b>
+        <span>{{ props.last.detail }}</span>
+      </div>
+      <span v-if="props.count" class="scan-last-count">{{ props.count }}</span>
+    </div>
     <div>
       <h2>Prêt à scanner</h2>
       <p>
         {{
           props.mode === 'perte'
-            ? "Vise le code-barres d'un produit à envoyer au rebut"
+            ? 'Enchaîne les scans des produits à mettre en perte.'
             : props.mode === 'stock'
-              ? "Vise le code-barres d'un produit pour voir son stock."
+              ? 'Enchaîne les scans des produits à réassortir.'
               : "Vise le code-barres d'un produit frais à relever (DLC à J-2 ou moins)."
         }}
       </p>

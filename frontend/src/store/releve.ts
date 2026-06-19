@@ -94,6 +94,13 @@ export const useReleveStore = defineStore('releve', {
       await api.deleteLine(id);
       await this.fetch();
     },
+
+    /** Envoie au rebut les pertes ciblées (ou toutes celles du jour) avec un motif unique. */
+    async rebut(motifId: number, lineIds?: number[]) {
+      const r = await api.sendRebut({ motifId, lineIds });
+      await this.fetch();
+      return r;
+    },
   },
 });
 

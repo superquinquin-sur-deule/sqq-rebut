@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Icon from '../components/Icon.vue';
 import ScanReady from '../components/scannette/ScanReady.vue';
 import ModeMenu from '../components/scannette/ModeMenu.vue';
 import EntryScreen, { type ValidatePayload } from '../components/scannette/EntryScreen.vue';
-import StockScreen from '../components/scannette/StockScreen.vue';
 import SessionList from '../components/scannette/SessionList.vue';
 import LineEditor from '../components/scannette/LineEditor.vue';
 import FlashConfirm from '../components/scannette/FlashConfirm.vue';
 import { useReleveStore } from '../store/releve';
 import { beep, errorBeep } from '../lib/sound';
+import { fmtQty, isWeightUom } from '../lib/qty';
 import type { Urgency } from '../lib/dates';
 import type { Product, ReleveLineDto } from '../api';
 
@@ -22,15 +22,24 @@ const product = ref<Product | null>(null);
 const editingLine = ref<ReleveLineDto | null>(null);
 const scanError = ref<string | null>(null);
 const busy = ref(false);
-const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency; motifLabel?: string; reassort?: boolean } | null>(null);
+const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency } | null>(null);
+/** Dernier produit ajouté en scan-en-rafale (pertes / réassort) : affiché jusqu'au prochain scan. */
+const lastAdded = ref<{ name: string; detail: string } | null>(null);
 
 let flashTimer: number | undefined;
 let poll: number | undefined;
+
+/** Nombre de lignes du mode courant (badge de l'onglet « Le relevé »). */
+const modeCount = computed(() => {
+  const t = mode.value === 'perte' ? 'PERTE' : mode.value === 'stock' ? 'REASSORT' : mode.value === 'dlc' ? 'DLC' : null;
+  return t ? store.lines.filter((l) => l.type === t).length : store.lines.length;
+});
 
 function pickMode(m: 'dlc' | 'perte' | 'stock') {
   mode.value = m;
   phase.value = 'ready';
   product.value = null;
+  lastAdded.value = null;
   scanError.value = null;
   tab.value = 'scan';
 }
@@ -39,16 +48,47 @@ function backToMenu() {
   mode.value = 'menu';
   phase.value = 'ready';
   product.value = null;
+  lastAdded.value = null;
   scanError.value = null;
+}
+
+function stockLabel(p: Product): string {
+  const q = p.qtyAvailable ?? 0;
+  return isWeightUom(p.uom)
+    ? `${q.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} kg`
+    : `${q.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${p.uom}`;
+}
+
+/** Pertes / réassort : on ajoute directement à la liste et on affiche le produit, sans validation. */
+async function addToList(p: Product) {
+  const type = mode.value === 'perte' ? 'PERTE' : 'REASSORT';
+  let line: ReleveLineDto;
+  try {
+    line = await store.addLine({ barcode: p.barcode ?? '', productId: p.id, type });
+  } catch {
+    scanError.value = mode.value === 'perte' ? "Échec d'ajout à la liste pertes" : "Échec d'ajout au réassort";
+    errorBeep();
+    return;
+  }
+  lastAdded.value = {
+    name: line.name ?? p.name,
+    detail: type === 'PERTE' ? `Ajouté · ${fmtQty(line.qty, line.uom ?? p.uom)}` : `Réassort · stock ${stockLabel(p)}`,
+  };
+  beep();
 }
 
 async function onScanned(code: string) {
   scanError.value = null;
   busy.value = true;
   try {
-    product.value = await store.lookup(code);
-    beep();
-    phase.value = 'entry';
+    const p = await store.lookup(code);
+    if (mode.value === 'dlc') {
+      product.value = p;
+      beep();
+      phase.value = 'entry';
+    } else {
+      await addToList(p);
+    }
     tab.value = 'scan';
   } catch (e) {
     const status = (e as { response?: { status?: number } })?.response?.status;
@@ -59,68 +99,42 @@ async function onScanned(code: string) {
   }
 }
 
-async function onValidate(payload: ValidatePayload) {
+function onValidate(payload: ValidatePayload) {
   if (!product.value) return;
   const name = product.value.name ?? '';
   const barcode = product.value.barcode ?? '';
   const productId = product.value.id;
   const uom = product.value.uom;
-  try {
-    if (payload.type === 'DLC') {
-      await store.addLine({ barcode, productId, dlc: payload.dlc, qty: payload.qty, type: 'DLC' });
-    } else {
-      await store.addLine({ barcode, productId, qty: payload.qty, type: 'PERTE', motifId: payload.motifId });
-    }
-  } catch {
-    scanError.value = payload.type === 'PERTE' ? "Échec d'envoi au rebut" : "Échec d'enregistrement de la ligne";
-    phase.value = 'ready';
-    product.value = null;
-    return;
-  }
-  beep();
-  flashData.value =
-    payload.type === 'DLC'
-      ? { name, qty: payload.qty, uom, urg: payload.urg }
-      : { name, qty: payload.qty, uom, motifLabel: payload.motifLabel };
-  phase.value = 'flash';
-  window.clearTimeout(flashTimer);
-  flashTimer = window.setTimeout(() => {
-    phase.value = 'ready';
-    product.value = null;
-    flashData.value = null;
-  }, 1250);
-}
-
-async function onAddReassort() {
-  if (!product.value) return;
-  const name = product.value.name ?? '';
-  const barcode = product.value.barcode ?? '';
-  const productId = product.value.id;
-  try {
-    await store.addLine({ barcode, productId, type: 'REASSORT' });
-  } catch {
-    scanError.value = "Échec d'ajout au réassort";
-    phase.value = 'ready';
-    product.value = null;
-    return;
-  }
-  beep();
-  flashData.value = { name, qty: 0, reassort: true };
-  phase.value = 'flash';
-  window.clearTimeout(flashTimer);
-  flashTimer = window.setTimeout(() => {
-    phase.value = 'ready';
-    product.value = null;
-    flashData.value = null;
-  }, 1250);
+  store
+    .addLine({ barcode, productId, dlc: payload.dlc, qty: payload.qty, type: 'DLC' })
+    .then(() => {
+      beep();
+      flashData.value = { name, qty: payload.qty, uom, urg: payload.urg };
+      phase.value = 'flash';
+      window.clearTimeout(flashTimer);
+      flashTimer = window.setTimeout(() => {
+        phase.value = 'ready';
+        product.value = null;
+        flashData.value = null;
+      }, 1250);
+    })
+    .catch(() => {
+      scanError.value = "Échec d'enregistrement de la ligne";
+      phase.value = 'ready';
+      product.value = null;
+    });
 }
 
 function onPicked(p: Product) {
   scanError.value = null;
-  product.value = p;
-  beep();
-  phase.value = 'entry';
   tab.value = 'scan';
+  if (mode.value === 'dlc') {
+    product.value = p;
+    beep();
+    phase.value = 'entry';
+  } else {
+    addToList(p);
+  }
 }
 
 function cancel() {
@@ -180,20 +194,12 @@ onUnmounted(() => {
                   <Icon name="arrowLeft" :size="20" />
                 </button>
                 <span class="sc-mode-label" :class="mode">{{
-                  mode === 'dlc' ? 'Relevé DLC' : mode === 'perte' ? 'Relevé Pertes' : 'Consulter le stock'
+                  mode === 'dlc' ? 'Relevé DLC' : mode === 'perte' ? 'Relevé Pertes' : 'Réassort'
                 }}</span>
               </div>
-              <StockScreen
-                v-if="mode === 'stock' && phase === 'entry' && product"
-                :product="product"
-                @again="cancel"
-                @add="onAddReassort"
-              />
               <EntryScreen
-                v-else-if="phase === 'entry' && product"
+                v-if="mode === 'dlc' && phase === 'entry' && product"
                 :product="product"
-                :mode="mode === 'perte' ? 'perte' : 'dlc'"
-                :motifs="store.motifs"
                 @validate="onValidate"
                 @cancel="cancel"
               />
@@ -202,6 +208,8 @@ onUnmounted(() => {
                 :mode="mode"
                 :error="scanError"
                 :busy="busy"
+                :last="mode === 'dlc' ? null : lastAdded"
+                :count="modeCount"
                 @scanned="onScanned"
                 @picked="onPicked"
               />
@@ -214,7 +222,7 @@ onUnmounted(() => {
             @delete="onEditDelete"
             @back="editingLine = null"
           />
-          <SessionList v-else :lines="store.lines" @select="editingLine = $event" />
+          <SessionList v-else :lines="store.lines" :mode="mode" @select="editingLine = $event" />
         </div>
 
         <FlashConfirm
@@ -223,8 +231,6 @@ onUnmounted(() => {
           :qty="flashData.qty"
           :uom="flashData.uom"
           :urg="flashData.urg"
-          :motif-label="flashData.motifLabel"
-          :reassort="flashData.reassort"
         />
 
         <div class="sc-tabs">
@@ -232,7 +238,7 @@ onUnmounted(() => {
             <Icon name="scan" :size="22" /><span class="lbl">Scanner</span>
           </button>
           <button :class="['sc-tab', { 'is-on': tab === 'liste' }]" @click="tab = 'liste'">
-            <span v-if="store.counts.total > 0" class="badge">{{ store.counts.total }}</span>
+            <span v-if="modeCount > 0" class="badge">{{ modeCount }}</span>
             <Icon name="list" :size="22" /><span class="lbl">Le relevé</span>
           </button>
         </div>

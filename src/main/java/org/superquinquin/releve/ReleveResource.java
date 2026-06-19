@@ -60,9 +60,10 @@ public class ReleveResource {
     @POST
     @Path("/rebut")
     @Operation(operationId = "sendRebut",
-            summary = "Envoyer les DLC J-0 au rebut (stock.scrap Odoo)")
+            summary = "Envoyer les pertes au rebut avec un motif unique (stock.scrap Odoo)")
     public RebutResult rebut(RebutRequest req) {
-        Log.infof("Envoi de rebut: lineIds=%s", req != null ? req.lineIds() : "tous");
-        return service.sendRebut(req != null ? req.lineIds() : null);
+        Log.infof("Envoi de rebut: lineIds=%s, motifId=%s",
+                req != null ? req.lineIds() : "toutes", req != null ? req.motifId() : null);
+        return service.sendRebut(req != null ? req.lineIds() : null, req != null ? req.motifId() : null);
     }
 }

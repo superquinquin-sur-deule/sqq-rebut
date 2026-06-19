@@ -88,6 +88,9 @@ components:
           items:
             type: integer
             format: int64
+        motifId:
+          type: integer
+          format: int64
     RebutResult:
       required:
       - created
@@ -336,7 +339,7 @@ paths:
           description: No Content
   /api/releve/rebut:
     post:
-      summary: Envoyer les DLC J-0 au rebut (stock.scrap Odoo)
+      summary: Envoyer les pertes au rebut avec un motif unique (stock.scrap Odoo)
       operationId: sendRebut
       tags:
       - Relevé

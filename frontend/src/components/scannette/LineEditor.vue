@@ -56,6 +56,10 @@ function save() {
           <span class="urgdot reassort" />
           <span>Réassort · {{ props.line.rayon }}</span>
         </template>
+        <template v-else-if="props.line.type === 'PERTE'">
+          <span class="urgdot perte" />
+          <span>{{ props.line.motifLabel ? `${props.line.motifLabel} · ` : 'Perte · ' }}{{ props.line.rayon }}</span>
+        </template>
         <template v-else>
           <span :class="['urgdot', props.line.urgency]" />
           <span>{{ URG[props.line.urgency as Urgency].tag }} · {{ fmtShort(parseISO(props.line.dlc as string)) }}</span>

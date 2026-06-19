@@ -1,23 +1,20 @@
 <script lang="ts">
 import type { Urgency } from '../../lib/dates';
 
-export type ValidatePayload =
-  | { type: 'DLC'; dlc: string; qty: number; urg: Urgency }
-  | { type: 'PERTE'; motifId: number; motifLabel: string; qty: number };
+export type ValidatePayload = { dlc: string; qty: number; urg: Urgency };
 </script>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import Icon from '../Icon.vue';
 import DlcGrid from './DlcGrid.vue';
-import MotifGrid from './MotifGrid.vue';
 import QtyStepper from './QtyStepper.vue';
 import WeightInput from './WeightInput.vue';
-import { URG, fmtShort, fmtISO, parseISO, urgFromDate, today } from '../../lib/dates';
+import { URG, fmtISO } from '../../lib/dates';
 import { gToKg, kgToG } from '../../lib/qty';
-import type { Motif, Product } from '../../api';
+import type { Product } from '../../api';
 
-const props = defineProps<{ product: Product; mode: 'dlc' | 'perte'; motifs?: Motif[] }>();
+const props = defineProps<{ product: Product }>();
 const emit = defineEmits<{
   (e: 'validate', payload: ValidatePayload): void;
   (e: 'cancel'): void;
@@ -27,44 +24,20 @@ const urgency = ref<Urgency | null>(null);
 const quantity = ref(1);
 const byWeight = computed(() => props.product.soldByWeight);
 const grams = ref<number | null>(props.product.scannedWeight != null ? kgToG(props.product.scannedWeight) : null);
-const exactDate = ref('');
-const showDate = ref(false);
-const minDate = fmtISO(today());
-
-const motifId = ref<number | null>(null);
 
 function pickUrg(k: Urgency) {
   urgency.value = k;
-  exactDate.value = '';
-  showDate.value = false;
 }
 
-function onExact(e: Event) {
-  const v = (e.target as HTMLInputElement).value;
-  exactDate.value = v;
-  if (v) urgency.value = urgFromDate(parseISO(v));
-}
-
-const dlcForLine = computed(() => exactDate.value || (urgency.value ? fmtISO(URG[urgency.value].date()) : null));
-
+const dlcForLine = computed(() => (urgency.value ? fmtISO(URG[urgency.value].date()) : null));
 const qtyForLine = computed(() => (byWeight.value ? (grams.value != null ? gToKg(grams.value) : null) : quantity.value));
-
 const canValidate = computed(
-  () =>
-    qtyForLine.value != null &&
-    qtyForLine.value > 0 &&
-    (props.mode === 'dlc' ? !!urgency.value && !!dlcForLine.value : motifId.value != null),
+  () => qtyForLine.value != null && qtyForLine.value > 0 && !!urgency.value && !!dlcForLine.value,
 );
 
 function validate() {
   if (!canValidate.value) return;
-  if (props.mode === 'dlc') {
-    emit('validate', { type: 'DLC', dlc: dlcForLine.value!, qty: qtyForLine.value!, urg: urgency.value! });
-  } else {
-    const m = (props.motifs ?? []).find((x) => x.id === motifId.value);
-    if (!m) return;
-    emit('validate', { type: 'PERTE', motifId: m.id, motifLabel: m.label, qty: qtyForLine.value! });
-  }
+  emit('validate', { dlc: dlcForLine.value!, qty: qtyForLine.value!, urg: urgency.value! });
 }
 </script>
 
@@ -82,14 +55,9 @@ function validate() {
         </div>
       </div>
 
-      <div v-if="props.mode === 'dlc'">
+      <div>
         <div class="field-label"><span>Date limite de consommation</span></div>
         <DlcGrid :value="urgency" @select="pickUrg" />
-      </div>
-
-      <div v-else>
-        <div class="field-label"><span>Motif de rupture</span></div>
-        <MotifGrid :motifs="props.motifs ?? []" :value="motifId" @select="motifId = $event" />
       </div>
 
       <div v-if="byWeight">
