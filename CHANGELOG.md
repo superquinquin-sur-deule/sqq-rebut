@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.15.0...v0.16.0) (2026-06-21)
+
+
+### Features
+
+* add button to send to rebut on poste interface ([83f9a37](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/83f9a376b64ccf5f80ef7a6ef5232b3104c5f58f))
+
 ## [0.15.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.14.0...v0.15.0) (2026-06-19)
 
 
