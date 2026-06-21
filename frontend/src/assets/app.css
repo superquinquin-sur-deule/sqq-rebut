@@ -1593,6 +1593,36 @@ button.sess-line:active {
     background: var(--sqq-line);
 }
 
+.dk-selall {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-display), serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    color: var(--sqq-brown-soft);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dk-selall input,
+.dk-table .td-check input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--sqq-brown);
+    cursor: pointer;
+    margin: 0;
+}
+
+.dk-table .td-check {
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .dk-table {
     width: 100%;
     /* fixed : sans ça chaque <table> de groupe (vue par urgence) calcule ses

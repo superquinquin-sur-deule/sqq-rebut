@@ -17,6 +17,7 @@ const query = ref('');
 const toastMsg = ref<string | null>(null);
 const rebutModalOpen = ref(false);
 const rebutBusy = ref(false);
+const selectedIds = ref<Set<number>>(new Set());
 
 let toastTimer: number | undefined;
 let poll: number | undefined;
@@ -52,6 +53,29 @@ const reassortLines = computed(() =>
 
 const unsentPerte = computed(() => perteLines.value.filter((l) => !l.sent));
 
+const allUnsentPerteSelected = computed(
+  () => unsentPerte.value.length > 0 && unsentPerte.value.every((l) => selectedIds.value.has(l.id!)),
+);
+
+function toggleLine(id: number) {
+  const next = new Set(selectedIds.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  selectedIds.value = next;
+}
+
+function toggleAll() {
+  selectedIds.value = allUnsentPerteSelected.value
+    ? new Set()
+    : new Set(unsentPerte.value.map((l) => l.id!));
+}
+
+watch(unsentPerte, (lines) => {
+  const live = new Set(lines.map((l) => l.id!));
+  const kept = [...selectedIds.value].filter((id) => live.has(id));
+  if (kept.length !== selectedIds.value.size) selectedIds.value = new Set(kept);
+});
+
 const showDlc = computed(() => typeFilter.value === 'all' || typeFilter.value === 'DLC');
 const showPerte = computed(() => typeFilter.value === 'all' || typeFilter.value === 'PERTE');
 const showReassort = computed(() => typeFilter.value === 'all' || typeFilter.value === 'REASSORT');
@@ -81,7 +105,7 @@ async function refresh() {
 }
 
 async function doRebut(motifId: number) {
-  const ids = unsentPerte.value.map((l) => l.id).filter((id): id is number => id != null);
+  const ids = [...selectedIds.value].filter((id) => unsentPerte.value.some((l) => l.id === id));
   if (!ids.length) {
     rebutModalOpen.value = false;
     return;
@@ -90,6 +114,7 @@ async function doRebut(motifId: number) {
   try {
     const r = await store.rebut(motifId, ids);
     toast(`${r.created} perte${r.created > 1 ? 's' : ''} envoyée${r.created > 1 ? 's' : ''} au rebut`);
+    selectedIds.value = new Set();
   } catch {
     toast("Échec de l'envoi au rebut");
   } finally {
@@ -178,16 +203,19 @@ onUnmounted(() => {
                 <span style="width:7px;height:7px;border-radius:50%;background:currentColor" />Pertes
               </span>
               <span class="line" />
+              <label v-if="unsentPerte.length" class="dk-selall">
+                <input type="checkbox" :checked="allUnsentPerteSelected" @change="toggleAll" />Tout sélectionner
+              </label>
               <button
                 v-if="unsentPerte.length"
                 class="btn btn-danger btn-sm"
-                :disabled="rebutBusy"
+                :disabled="rebutBusy || !selectedIds.size"
                 @click="rebutModalOpen = true"
               >
-                <Icon name="trash" :size="16" />Envoyer au rebut · {{ unsentPerte.length }}
+                <Icon name="trash" :size="16" />Envoyer au rebut · {{ selectedIds.size }}
               </button>
             </div>
-            <ReleveTable :lines="perteLines" @qty="setQty" @delete="del" />
+            <ReleveTable :lines="perteLines" selectable :selected="selectedIds" @qty="setQty" @delete="del" @toggle="toggleLine" />
           </div>
           <div v-if="showReassort && reassortLines.length">
             <div class="dk-group-head">
@@ -205,7 +233,7 @@ onUnmounted(() => {
     <RebutMotifModal
       v-if="rebutModalOpen"
       :motifs="store.motifs"
-      :count="unsentPerte.length"
+      :count="selectedIds.size"
       :busy="rebutBusy"
       @confirm="doRebut"
       @close="rebutModalOpen = false"

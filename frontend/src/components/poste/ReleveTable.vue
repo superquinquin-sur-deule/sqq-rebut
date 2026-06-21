@@ -6,10 +6,13 @@ import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{
   lines: ReleveLineDto[];
+  selectable?: boolean;
+  selected?: Set<number>;
 }>();
 const emit = defineEmits<{
   (e: 'qty', id: number, qty: number): void;
   (e: 'delete', id: number): void;
+  (e: 'toggle', id: number): void;
 }>();
 
 function onWeight(id: number, e: Event) {
@@ -26,6 +29,7 @@ function onWeight(id: number, e: Event) {
 <template>
   <table class="dk-table">
     <colgroup>
+      <col v-if="props.selectable" style="width:40px" />
       <col style="width:38%" />
       <col style="width:18%" />
       <col style="width:15%" />
@@ -34,11 +38,20 @@ function onWeight(id: number, e: Event) {
     </colgroup>
     <thead>
       <tr>
+        <th v-if="props.selectable" class="td-check"></th>
         <th>Produit</th><th>Rayon</th><th>DLC / Motif</th><th>Quantité</th><th style="text-align:right">Action</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="l in props.lines" :key="l.id" :class="{ 'row-sent': l.sent }">
+        <td v-if="props.selectable" class="td-check">
+          <input
+            v-if="!l.sent"
+            type="checkbox"
+            :checked="props.selected?.has(l.id!)"
+            @change="emit('toggle', l.id!)"
+          />
+        </td>
         <td>
           <div class="td-prod">{{ l.name }}</div>
           <div class="td-code">{{ l.barcode }}</div>
