@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.16.1...v0.17.0) (2026-06-22)
+
+
+### Features
+
+* replace last count button with trash ([0b38c16](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/0b38c1643d25c67a1df5ee509ec3738f1f2cdc7c))
+* slide right or left to remove releve line ([45708ac](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/45708ac584737029f44de893585a3fd9f22f3480))
+
 ## [0.16.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.16.0...v0.16.1) (2026-06-22)
 
 
