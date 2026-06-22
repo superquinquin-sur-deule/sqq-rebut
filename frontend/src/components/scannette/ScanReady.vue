@@ -9,9 +9,12 @@ const props = defineProps<{
   error?: string | null;
   busy?: boolean;
   last?: { name: string; detail: string } | null;
-  count?: number;
 }>();
-const emit = defineEmits<{ (e: 'scanned', code: string): void; (e: 'picked', product: Product): void }>();
+const emit = defineEmits<{
+  (e: 'scanned', code: string): void;
+  (e: 'picked', product: Product): void;
+  (e: 'delete'): void;
+}>();
 
 const code = ref('');
 const inp = ref<HTMLInputElement | null>(null);
@@ -90,7 +93,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
         <b>{{ props.last.name }}</b>
         <span>{{ props.last.detail }}</span>
       </div>
-      <span v-if="props.count" class="scan-last-count">{{ props.count }}</span>
+      <button class="scan-last-del" type="button" aria-label="Supprimer du relevé" @click="emit('delete')">
+        <Icon name="trash" :size="18" />
+      </button>
     </div>
     <div>
       <h2>Prêt à scanner</h2>

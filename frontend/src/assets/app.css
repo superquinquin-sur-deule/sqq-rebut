@@ -573,20 +573,26 @@ input, select {
     color: var(--sqq-brown-soft);
 }
 
-.scan-last-count {
+.scan-last-del {
     flex-shrink: 0;
-    min-width: 26px;
-    height: 26px;
-    padding: 0 7px;
-    border-radius: 13px;
-    background: var(--sqq-brown);
-    color: var(--sqq-yellow);
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 13px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 9px;
+    border: 1.5px solid var(--sqq-line);
+    background: #fff;
+    color: var(--sqq-terracotta);
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.scan-last-del:active {
+    background: var(--sqq-terracotta);
+    color: #fff;
+    border-color: var(--sqq-terracotta);
 }
 
 .scan-trigger-hint {

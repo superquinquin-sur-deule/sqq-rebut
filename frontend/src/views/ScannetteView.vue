@@ -24,7 +24,7 @@ const scanError = ref<string | null>(null);
 const busy = ref(false);
 const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency } | null>(null);
 /** Dernier produit ajouté en scan-en-rafale (pertes / réassort) : affiché jusqu'au prochain scan. */
-const lastAdded = ref<{ name: string; detail: string } | null>(null);
+const lastAdded = ref<{ id: number; name: string; detail: string } | null>(null);
 
 let flashTimer: number | undefined;
 let poll: number | undefined;
@@ -74,10 +74,24 @@ async function addToList(p: Product) {
     return;
   }
   lastAdded.value = {
+    id: line.id,
     name: line.name ?? p.name,
     detail: type === 'PERTE' ? `Ajouté · ${fmtQty(line.qty, line.uom ?? p.uom)}` : `Réassort · stock ${stockLabel(p)}`,
   };
   beep();
+}
+
+/** Supprime la dernière ligne ajoutée (pertes / réassort) depuis l'écran de scan. */
+async function deleteLast() {
+  if (!lastAdded.value) return;
+  const id = lastAdded.value.id;
+  lastAdded.value = null;
+  try {
+    await store.remove(id);
+  } catch {
+    scanError.value = mode.value === 'perte' ? 'Échec de suppression de la perte' : 'Échec de suppression du réassort';
+    errorBeep();
+  }
 }
 
 async function onScanned(code: string) {
@@ -212,9 +226,9 @@ onUnmounted(() => {
                 :error="scanError"
                 :busy="busy"
                 :last="mode === 'dlc' ? null : lastAdded"
-                :count="modeCount"
                 @scanned="onScanned"
                 @picked="onPicked"
+                @delete="deleteLast"
               />
             </template>
           </template>
