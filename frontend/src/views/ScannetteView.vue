@@ -62,9 +62,12 @@ function stockLabel(p: Product): string {
 /** Pertes / réassort : on ajoute directement à la liste et on affiche le produit, sans validation. */
 async function addToList(p: Product) {
   const type = mode.value === 'perte' ? 'PERTE' : 'REASSORT';
+  // Perte d'un produit au poids : on remonte le poids précis du code-barres balance
+  // (réassort = simple liste, le backend ignore la quantité).
+  const qty = type === 'PERTE' && p.soldByWeight ? p.scannedWeight : undefined;
   let line: ReleveLineDto;
   try {
-    line = await store.addLine({ barcode: p.barcode ?? '', productId: p.id, type });
+    line = await store.addLine({ barcode: p.barcode ?? '', productId: p.id, type, qty });
   } catch {
     scanError.value = mode.value === 'perte' ? "Échec d'ajout à la liste pertes" : "Échec d'ajout au réassort";
     errorBeep();
