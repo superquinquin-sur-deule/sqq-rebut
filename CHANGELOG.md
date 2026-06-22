@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.16.0...v0.16.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* do not ignore product weight for pertes ([c78744c](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/c78744c76a9caf7acc206827525ffae93b70498e))
+
 ## [0.16.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.15.0...v0.16.0) (2026-06-21)
 
 
