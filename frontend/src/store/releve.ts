@@ -4,15 +4,12 @@ import { api, type Motif, type NewLineRequest, type Product, type ReleveLineDto 
 interface State {
   lines: ReleveLineDto[];
   date: string;
-  /** Relevé courant : null = celui du jour (scannette), sinon un relevé précis (poste). */
   releveId: number | null;
-  /** Motifs de rupture (Odoo), chargés une fois puis gardés en cache côté front. */
   motifs: Motif[];
   loading: boolean;
   error: string | null;
 }
 
-/** État partagé du relevé du soir — lu par la scannette ET le poste responsable. */
 export const useReleveStore = defineStore('releve', {
   state: (): State => ({
     lines: [],
@@ -91,11 +88,18 @@ export const useReleveStore = defineStore('releve', {
     },
 
     async remove(id: number) {
-      await api.deleteLine(id);
+      const idx = this.lines.findIndex((l) => l.id === id);
+      const backup = idx >= 0 ? this.lines[idx] : null;
+      if (idx >= 0) this.lines.splice(idx, 1);
+      try {
+        await api.deleteLine(id);
+      } catch (e) {
+        if (backup) this.lines.splice(idx, 0, backup);
+        throw e;
+      }
       await this.fetch();
     },
 
-    /** Envoie au rebut les pertes ciblées (ou toutes celles du jour) avec un motif unique. */
     async rebut(motifId: number, lineIds?: number[]) {
       const r = await api.sendRebut({ motifId, lineIds });
       await this.fetch();

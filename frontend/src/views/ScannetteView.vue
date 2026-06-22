@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import Icon from '../components/Icon.vue';
 import ScanReady from '../components/scannette/ScanReady.vue';
 import ModeMenu from '../components/scannette/ModeMenu.vue';
@@ -23,17 +23,25 @@ const editingLine = ref<ReleveLineDto | null>(null);
 const scanError = ref<string | null>(null);
 const busy = ref(false);
 const flashData = ref<{ name: string; qty: number; uom?: string; urg?: Urgency } | null>(null);
-/** Dernier produit ajouté en scan-en-rafale (pertes / réassort) : affiché jusqu'au prochain scan. */
 const lastAdded = ref<{ id: number; name: string; detail: string } | null>(null);
 
 let flashTimer: number | undefined;
 let poll: number | undefined;
 
-/** Nombre de lignes du mode courant (badge de l'onglet « Le relevé »). */
 const modeCount = computed(() => {
   const t = mode.value === 'perte' ? 'PERTE' : mode.value === 'stock' ? 'REASSORT' : mode.value === 'dlc' ? 'DLC' : null;
   return t ? store.lines.filter((l) => l.type === t).length : store.lines.length;
 });
+
+watch(
+  () => store.lines,
+  (lines) => {
+    if (lastAdded.value && !lines.some((l) => l.id === lastAdded.value!.id)) {
+      lastAdded.value = null;
+    }
+  },
+  { deep: true },
+);
 
 function pickMode(m: 'dlc' | 'perte' | 'stock') {
   mode.value = m;
@@ -59,11 +67,8 @@ function stockLabel(p: Product): string {
     : `${q.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${p.uom}`;
 }
 
-/** Pertes / réassort : on ajoute directement à la liste et on affiche le produit, sans validation. */
 async function addToList(p: Product) {
   const type = mode.value === 'perte' ? 'PERTE' : 'REASSORT';
-  // Perte d'un produit au poids : on remonte le poids précis du code-barres balance
-  // (réassort = simple liste, le backend ignore la quantité).
   const qty = type === 'PERTE' && p.soldByWeight ? p.scannedWeight : undefined;
   let line: ReleveLineDto;
   try {
@@ -81,7 +86,6 @@ async function addToList(p: Product) {
   beep();
 }
 
-/** Supprime la dernière ligne ajoutée (pertes / réassort) depuis l'écran de scan. */
 async function deleteLast() {
   if (!lastAdded.value) return;
   const id = lastAdded.value.id;

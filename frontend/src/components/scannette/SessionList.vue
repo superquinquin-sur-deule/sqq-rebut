@@ -2,9 +2,8 @@
 import { computed, ref, onUnmounted } from 'vue';
 import Icon from '../Icon.vue';
 import RebutMotifModal from './RebutMotifModal.vue';
+import SessionLine from './SessionLine.vue';
 import { useReleveStore } from '../../store/releve';
-import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
-import { fmtQty } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{ lines: ReleveLineDto[]; mode: 'menu' | 'dlc' | 'perte' | 'stock' }>();
@@ -51,6 +50,15 @@ function toast(m: string) {
   msgTimer = window.setTimeout(() => (rebutMsg.value = null), 2600);
 }
 
+async function removeLine(l: ReleveLineDto) {
+  if (l.id == null) return;
+  try {
+    await store.remove(l.id);
+  } catch {
+    toast('Échec de suppression de la ligne');
+  }
+}
+
 async function doRebut(motifId: number) {
   const ids = unsentPerte.value.map((l) => l.id).filter((id): id is number => id != null);
   if (!ids.length) {
@@ -84,25 +92,13 @@ onUnmounted(() => window.clearTimeout(msgTimer));
     <div class="sess-scroll">
       <template v-for="g in groups" :key="g.key">
         <div class="sess-group-head">{{ g.title }} · {{ g.lines.length }}</div>
-        <component
-          :is="l.sent ? 'div' : 'button'"
+        <SessionLine
           v-for="l in g.lines"
           :key="l.id"
-          :type="l.sent ? undefined : 'button'"
-          :class="['sess-line', { 'is-sent': l.sent }]"
-          @click="!l.sent && emit('select', l)"
-        >
-          <span :class="['urgdot', l.type === 'PERTE' ? 'perte' : l.type === 'REASSORT' ? 'reassort' : l.urgency]" />
-          <div class="nm">
-            <b>{{ l.name }}</b>
-            <span v-if="l.type === 'PERTE'">{{ l.motifLabel ? `${l.motifLabel} · ` : 'Perte · ' }}{{ l.rayon }}</span>
-            <span v-else-if="l.type === 'REASSORT'">Réassort · {{ l.rayon }}</span>
-            <span v-else>{{ URG[l.urgency as Urgency].tag }} · {{ fmtShort(parseISO(l.dlc as string)) }} · {{ l.rayon }}</span>
-          </div>
-          <span v-if="l.type !== 'REASSORT'" class="q">{{ fmtQty(l.qty, l.uom) }}</span>
-          <Icon v-if="l.sent" name="checkCircle" :size="18" class="sess-sent" />
-          <Icon v-else name="chevR" :size="18" class="sess-chev" />
-        </component>
+          :line="l"
+          @select="emit('select', l)"
+          @remove="removeLine(l)"
+        />
       </template>
     </div>
 

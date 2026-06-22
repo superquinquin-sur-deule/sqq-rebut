@@ -1146,6 +1146,23 @@ input, select {
     margin-top: 8px;
 }
 
+.sess-row {
+    position: relative;
+}
+
+.sess-row-bg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    background: var(--sqq-terracotta);
+    border-radius: 11px;
+    color: #fff;
+    pointer-events: none;
+}
+
 .sess-line {
     display: flex;
     align-items: center;
@@ -1154,6 +1171,13 @@ input, select {
     border: 1px solid var(--sqq-line);
     border-radius: 11px;
     padding: 10px 12px;
+    position: relative;
+    touch-action: pan-y;
+    transition: transform 0.18s ease;
+}
+
+.sess-line.is-swiping {
+    transition: none;
 }
 
 .sess-line .urgdot {
