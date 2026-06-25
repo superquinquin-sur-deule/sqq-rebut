@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.17.0...v0.18.0) (2026-06-25)
+
+
+### Features
+
+* **reassort:** show stock qty on scannette relevé ([244d425](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/244d42515e7b47700ebe235d75ae68075d24f78d))
+* small changes on how we compute shown quantities ([8bcfa11](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/8bcfa1124ec6685eb6015b73979cf81a6445c0d9))
+
 ## [0.17.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.16.1...v0.17.0) (2026-06-22)
 
 
