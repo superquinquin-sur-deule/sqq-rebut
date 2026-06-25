@@ -71,10 +71,11 @@ async function addToList(p: Product) {
     errorBeep();
     return;
   }
+  const justScanned = qty ?? 1;
   lastAdded.value = {
     id: line.id,
     name: line.name ?? p.name,
-    detail: type === 'PERTE' ? `Ajouté · ${fmtQty(line.qty, line.uom ?? p.uom)}` : `Réassort · stock ${fmtStock(p.qtyAvailable ?? 0, p.uom)}`,
+    detail: type === 'PERTE' ? `Ajouté · ${fmtQty(justScanned, line.uom ?? p.uom)}` : `Réassort · stock ${fmtStock(p.qtyAvailable ?? 0, p.uom)}`,
   };
   beep();
 }
