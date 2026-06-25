@@ -160,6 +160,9 @@ components:
           type: boolean
         scrapRef:
           type: string
+        qtyAvailable:
+          type: number
+          format: double
     ReleveSummaryDto:
       required:
       - id

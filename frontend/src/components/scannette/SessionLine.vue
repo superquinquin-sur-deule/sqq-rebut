@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import Icon from '../Icon.vue';
 import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
-import { fmtQty } from '../../lib/qty';
+import { fmtQty, fmtStock } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{ line: ReleveLineDto }>();
@@ -77,6 +77,7 @@ const bgOpacity = computed(() => Math.min(1, Math.abs(dx.value) / THRESHOLD));
         <span v-else>{{ URG[line.urgency as Urgency].tag }} · {{ fmtShort(parseISO(line.dlc as string)) }} · {{ line.rayon }}</span>
       </div>
       <span v-if="line.type !== 'REASSORT'" class="q">{{ fmtQty(line.qty, line.uom) }}</span>
+      <span v-else-if="line.qtyAvailable != null" class="q">{{ fmtStock(line.qtyAvailable, line.uom) }}</span>
       <Icon v-if="line.sent" name="checkCircle" :size="18" class="sess-sent" />
       <Icon v-else name="chevR" :size="18" class="sess-chev" />
     </component>

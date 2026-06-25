@@ -270,6 +270,7 @@ class ReleveResourceTest {
                 .body("dlc", nullValue())
                 .body("motifLabel", nullValue())
                 .body("qty", is(1.0f)) // qté fixée à 1 en interne (colonne non-null), jamais affichée
+                .body("qtyAvailable", is(2.248f)) // stock Odoo figé au scan, affiché sur la ligne réassort
                 .body("sent", is(false)) // jamais envoyé au rebut : le réassort est une liste interne
                 .body("scrapRef", nullValue());
     }

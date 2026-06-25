@@ -18,11 +18,12 @@ public record ReleveLineDto(
         String motifLabel,
         double qty,
         boolean sent,
-        String scrapRef) {
+        String scrapRef,
+        Double qtyAvailable) {
 
     public static ReleveLineDto from(ReleveLine l, LocalDate today) {
         String urgency = l.type == LineType.DLC && l.dlc != null ? Urgency.of(l.dlc, today).key() : null;
         return new ReleveLineDto(l.id, l.barcode, l.name, l.rayon, l.uom, l.type.name(), l.dlc, urgency,
-                l.motifId, l.motifLabel, l.qty, l.sent, l.scrapRef);
+                l.motifId, l.motifLabel, l.qty, l.sent, l.scrapRef, l.qtyAvailable);
     }
 }

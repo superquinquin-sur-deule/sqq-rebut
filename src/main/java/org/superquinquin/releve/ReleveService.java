@@ -124,6 +124,7 @@ public class ReleveService {
         l.rayon = p.rayon();
         l.uom = p.uom();
         l.uomId = p.uomId();
+        l.qtyAvailable = p.qtyAvailable();
         l.type = type;
         if (type == LineType.DLC) {
             l.dlc = req.dlc();

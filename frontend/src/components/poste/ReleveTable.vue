@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Icon from '../Icon.vue';
 import { URG, fmtShort, parseISO, type Urgency } from '../../lib/dates';
-import { fmtQty, isWeightUom, round3 } from '../../lib/qty';
+import { fmtQty, fmtStock, isWeightUom, round3 } from '../../lib/qty';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{
@@ -66,7 +66,9 @@ function onWeight(id: number, e: Event) {
           </template>
         </td>
         <td>
-          <span v-if="l.type === 'REASSORT'" class="td-rayon">—</span>
+          <span v-if="l.type === 'REASSORT'" class="td-rayon">
+            {{ l.qtyAvailable != null ? fmtStock(l.qtyAvailable, l.uom) : '—' }}
+          </span>
           <b v-else-if="l.sent" style="font-family:var(--font-display);font-size:15px">{{ fmtQty(l.qty, l.uom) }}</b>
           <div v-else-if="isWeightUom(l.uom)" class="dk-qty dk-weight">
             <input type="number" step="0.001" min="0.001" :value="l.qty" @change="onWeight(l.id!, $event)" />

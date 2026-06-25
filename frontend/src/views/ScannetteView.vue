@@ -9,7 +9,7 @@ import LineEditor from '../components/scannette/LineEditor.vue';
 import FlashConfirm from '../components/scannette/FlashConfirm.vue';
 import { useReleveStore } from '../store/releve';
 import { beep, errorBeep } from '../lib/sound';
-import { fmtQty, isWeightUom } from '../lib/qty';
+import { fmtQty, fmtStock } from '../lib/qty';
 import type { Urgency } from '../lib/dates';
 import type { Product, ReleveLineDto } from '../api';
 
@@ -60,13 +60,6 @@ function backToMenu() {
   scanError.value = null;
 }
 
-function stockLabel(p: Product): string {
-  const q = p.qtyAvailable ?? 0;
-  return isWeightUom(p.uom)
-    ? `${q.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} kg`
-    : `${q.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} ${p.uom}`;
-}
-
 async function addToList(p: Product) {
   const type = mode.value === 'perte' ? 'PERTE' : 'REASSORT';
   const qty = type === 'PERTE' && p.soldByWeight ? p.scannedWeight : undefined;
@@ -81,7 +74,7 @@ async function addToList(p: Product) {
   lastAdded.value = {
     id: line.id,
     name: line.name ?? p.name,
-    detail: type === 'PERTE' ? `Ajouté · ${fmtQty(line.qty, line.uom ?? p.uom)}` : `Réassort · stock ${stockLabel(p)}`,
+    detail: type === 'PERTE' ? `Ajouté · ${fmtQty(line.qty, line.uom ?? p.uom)}` : `Réassort · stock ${fmtStock(p.qtyAvailable ?? 0, p.uom)}`,
   };
   beep();
 }

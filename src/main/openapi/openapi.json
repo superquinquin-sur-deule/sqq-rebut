@@ -196,6 +196,10 @@
           },
           "scrapRef" : {
             "type" : "string"
+          },
+          "qtyAvailable" : {
+            "type" : "number",
+            "format" : "double"
           }
         }
       },

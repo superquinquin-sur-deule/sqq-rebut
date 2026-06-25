@@ -35,6 +35,9 @@ public class ReleveLine extends PanacheEntity {
     @Column(name = "uom_id")
     public Long uomId;
 
+    @Column(name = "qty_available")
+    public Double qtyAvailable;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     public LineType type = LineType.DLC;
