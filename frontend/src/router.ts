@@ -24,6 +24,7 @@ export const router = createRouter({
     },
     { path: '/releves/:releveId(\\d+)', name: 'poste', component: PosteView },
     { path: '/historique', name: 'historique', component: () => import('./views/HistoriqueView.vue') },
+    { path: '/reglages', name: 'reglages', component: () => import('./views/ReglagesView.vue') },
     { path: '/poste', redirect: '/releves' },
   ],
 });

@@ -5,7 +5,9 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
@@ -25,6 +27,8 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
     // insuffisant » dans les stubs (le stock des F&L n'est pas saisi dans Odoo).
     public static final int INSUFFICIENT_STOCK_ORIGIN_ID = 11;
     public static final int INSUFFICIENT_STOCK_SCRAP_ID = 8888;
+    public static final String BREVO_MESSAGE_ID = "<202607291800.1@smtp-relay.mailin.fr>";
+    public static final String INVALID_BREVO_KEY = "cle-invalide";
 
     private WireMockServer server;
 
@@ -185,7 +189,24 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                 .withRequestBody(containing("do_scrap"))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":true}")));
 
-        return Map.of("odoo.url", server.baseUrl());
+        // Brevo — clé refusée (profil de test dédié) : vérifie la remontée en 502.
+        server.stubFor(post(urlEqualTo("/v3/smtp/email"))
+                .atPriority(1)
+                .withHeader("api-key", equalTo(INVALID_BREVO_KEY))
+                .willReturn(aResponse().withStatus(401)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"code\":\"unauthorized\",\"message\":\"Key not found\"}")));
+
+        // Brevo — envoi transactionnel accepté
+        server.stubFor(post(urlEqualTo("/v3/smtp/email"))
+                .atPriority(2)
+                .willReturn(aResponse().withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"messageId\":\"" + BREVO_MESSAGE_ID + "\"}")));
+
+        return Map.of(
+                "odoo.url", server.baseUrl(),
+                "brevo.base-url", server.baseUrl());
     }
 
     @Override

@@ -10,7 +10,6 @@ import org.superquinquin.odoo.OdooClient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -104,12 +103,8 @@ public class ProductService {
                 m2oId(p.get("uom_id")),
                 p.path("list_price").asDouble(0),
                 p.path("qty_available").asDouble(0),
-                soldByWeight(uom),
+                Uom.soldByWeight(uom),
                 null);
-    }
-
-    private static boolean soldByWeight(String uom) {
-        return uom != null && uom.toLowerCase(Locale.ROOT).startsWith("kg");
     }
 
     private static Double scannedWeight(ScaleMatch m, Product p) {

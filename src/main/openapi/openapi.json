@@ -11,6 +11,11 @@
           }
         }
       },
+      "Instant" : {
+        "type" : "string",
+        "format" : "date-time",
+        "examples" : [ "2022-03-10T16:15:50Z" ]
+      },
       "LocalDate" : {
         "type" : "string",
         "format" : "date",
@@ -220,6 +225,74 @@
           }
         }
       },
+      "ReportSendResult" : {
+        "required" : [ "lineCount", "recipients" ],
+        "type" : "object",
+        "properties" : {
+          "lineCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Nombre de produits au-delà des seuils dans le rapport envoyé"
+          },
+          "recipients" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "messageId" : {
+            "type" : "string",
+            "description" : "Identifiant du message renvoyé par Brevo"
+          }
+        }
+      },
+      "ReportSettingsDto" : {
+        "required" : [ "enabled", "sendTime", "recipients", "thresholdPieces", "thresholdKg" ],
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "sendTime" : {
+            "type" : "string",
+            "description" : "Heure d'envoi (Europe/Paris), format HH:mm",
+            "examples" : [ "18:00" ]
+          },
+          "recipients" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "description" : "Adresses e-mail destinataires"
+          },
+          "thresholdPieces" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "Seuil en pièces : au-delà (strictement), le produit est listé"
+          },
+          "thresholdKg" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "Seuil en kg : au-delà (strictement), le produit est listé"
+          },
+          "lastSentAt" : {
+            "description" : "Date/heure du dernier envoi (automatique ou manuel)",
+            "readOnly" : true,
+            "type" : "string",
+            "$ref" : "#/components/schemas/Instant"
+          },
+          "lastStatus" : {
+            "type" : "string",
+            "description" : "Statut du dernier envoi : OK ou ERREUR",
+            "readOnly" : true
+          },
+          "lastError" : {
+            "type" : "string",
+            "description" : "Message d'erreur du dernier envoi",
+            "readOnly" : true
+          }
+        }
+      },
       "UpdateLineRequest" : {
         "type" : "object",
         "properties" : {
@@ -237,6 +310,8 @@
     "name" : "Motifs"
   }, {
     "name" : "Produits"
+  }, {
+    "name" : "Rapport"
   }, {
     "name" : "Relevé"
   } ],
@@ -531,6 +606,74 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ReleveDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/report/send-now" : {
+      "post" : {
+        "summary" : "Envoyer immédiatement le rapport DLC du jour aux destinataires enregistrés",
+        "operationId" : "sendReportNow",
+        "tags" : [ "Rapport" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportSendResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/report/settings" : {
+      "put" : {
+        "summary" : "Enregistrer les réglages du rapport DLC quotidien",
+        "operationId" : "updateReportSettings",
+        "tags" : [ "Rapport" ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReportSettingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportSettingsDto"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          }
+        }
+      },
+      "get" : {
+        "summary" : "Lire les réglages du rapport DLC quotidien",
+        "operationId" : "getReportSettings",
+        "tags" : [ "Rapport" ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportSettingsDto"
                 }
               }
             }

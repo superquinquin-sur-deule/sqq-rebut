@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<body style="margin:0;padding:24px;background:#FFFDF6;font-family:Arial,Helvetica,sans-serif;color:#3B2A1A">
+<h1 style="font-size:20px;margin:0 0 4px">Rapport DLC du {data.dateLabel}</h1>
+
+{#if data.total == 0}
+  <p style="font-size:14px;margin:12px 0 0">
+    Rien à signaler aujourd'hui : aucun produit DLC au-delà des seuils ({data.thresholdsLabel}).
+  </p>
+{#else}
+  <p style="font-size:13px;color:#7A6A58;margin:4px 0 20px">
+    {data.total} produit{#if data.total > 1}s{/if} au-delà des seuils ({data.thresholdsLabel}).
+    Détail complet en pièce jointe.
+  </p>
+
+  {#for g in data.groups}
+    <h2 style="font-size:15px;margin:22px 0 8px">{g.tag} · {g.label} ({g.lines.size})</h2>
+    <table role="presentation" cellpadding="6" cellspacing="0" width="100%"
+           style="border-collapse:collapse;font-size:13px">
+      <tr style="background:#F1DC43;text-align:left">
+        <th>Rayon</th>
+        <th>Produit</th>
+        <th>DLC</th>
+        <th style="text-align:right">Quantité</th>
+      </tr>
+      {#for l in g.lines}
+        <tr style="border-bottom:1px solid #E8E0CF">
+          <td>{l.rayonLabel}</td>
+          <td>{l.name}</td>
+          <td style="white-space:nowrap">{l.dlcLabel}</td>
+          <td style="text-align:right;white-space:nowrap">{l.qtyLabel}</td>
+        </tr>
+      {/for}
+    </table>
+  {/for}
+{/if}
+
+<p style="font-size:11px;color:#9B8B78;margin:28px 0 0">
+  Rebut SuperQuinquin — envoi automatique, ne pas répondre à ce message.
+</p>
+</body>
+</html>

@@ -148,6 +148,7 @@ onUnmounted(() => {
       <nav class="poste-nav">
         <router-link class="nav-link" :to="{ name: 'historique' }"><Icon name="clock" :size="16" />Historique</router-link>
         <router-link class="nav-link" :to="{ name: 'scannette' }"><Icon name="scan" :size="16" />Scannette</router-link>
+        <router-link class="nav-link" :to="{ name: 'reglages' }"><Icon name="settings" :size="16" />Réglages</router-link>
       </nav>
     </div>
 

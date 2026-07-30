@@ -29,6 +29,7 @@ onMounted(async () => {
       <nav class="poste-nav">
         <router-link class="nav-link" to="/releves"><Icon name="calendar" :size="16" />Relevé du jour</router-link>
         <router-link class="nav-link" :to="{ name: 'scannette' }"><Icon name="scan" :size="16" />Scannette</router-link>
+        <router-link class="nav-link" :to="{ name: 'reglages' }"><Icon name="settings" :size="16" />Réglages</router-link>
       </nav>
     </div>
 

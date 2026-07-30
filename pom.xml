@@ -9,6 +9,7 @@
 
     <properties>
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
+        <fastexcel.version>0.19.0</fastexcel.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -65,6 +66,20 @@
             <artifactId>quarkus-flyway</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-qute</artifactId>
+        </dependency>
+        <!-- Écriture XLSX : ~250 Ko contre ~13 Mo pour poi-ooxml, pour 7 colonnes c'est suffisant. -->
+        <dependency>
+            <groupId>org.dhatim</groupId>
+            <artifactId>fastexcel</artifactId>
+            <version>${fastexcel.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkiverse.quinoa</groupId>
             <artifactId>quarkus-quinoa</artifactId>
             <version>2.8.3</version>
@@ -110,6 +125,10 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
+                        <!-- Aligne le fuseau de la JVM sur report.timezone : sinon, sur un runner
+                             en UTC, le relevé « du jour » et le rapport peuvent viser deux dates
+                             différentes en fin de soirée. Reflète le TZ attendu en production. -->
+                        <user.timezone>Europe/Paris</user.timezone>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
