@@ -113,6 +113,10 @@ public class ProductService {
     }
 
     private static Double scannedWeight(ScaleMatch m, Product p) {
+        // La règle « Consigne » (999) transforme en `value * -1` : jamais de poids négatif à pré-remplir.
+        if (m.value() <= 0) {
+            return null;
+        }
         return switch (m.type()) {
             case WEIGHT -> m.value();
             case PRICE_TO_WEIGHT -> p.price() > 0 ? Math.round(m.value() / p.price() * 1000) / 1000.0 : null;

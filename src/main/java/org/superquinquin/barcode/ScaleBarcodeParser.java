@@ -1,7 +1,10 @@
 package org.superquinquin.barcode;
 
+import io.quarkus.logging.Log;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,7 +13,8 @@ public final class ScaleBarcodeParser {
     private ScaleBarcodeParser() {
     }
 
-    public static Optional<CompiledRule> compile(String name, int sequence, BarcodeRuleType type, String pattern) {
+    public static Optional<CompiledRule> compile(String name, int sequence, BarcodeRuleType type,
+                                                 String pattern, String transformExpr) {
         if (pattern == null) {
             return Optional.empty();
         }
@@ -30,7 +34,8 @@ public final class ScaleBarcodeParser {
         regex.append("(\\d{").append(intDigits + decDigits).append("})");
         appendLiteral(regex, pattern.substring(close + 1));
         return Optional.of(new CompiledRule(name, sequence, type,
-                Pattern.compile(regex.toString()), intDigits, decDigits));
+                Pattern.compile(regex.toString()), intDigits, decDigits,
+                BarcodeTransform.of(transformExpr)));
     }
 
     /** Première règle qui matche en préfixe d'un scan EAN-13 (la liste doit être triée par sequence). */
@@ -43,12 +48,21 @@ public final class ScaleBarcodeParser {
             if (!m.lookingAt()) {
                 continue;
             }
-            double value = Integer.parseInt(m.group(1)) / Math.pow(10, rule.decDigits());
+            double raw = Integer.parseInt(m.group(1)) / Math.pow(10, rule.decDigits());
+            OptionalDouble value = rule.transform().apply(raw);
+            if (value.isEmpty()) {
+                // Abandon plutôt que `continue` : deux règles peuvent partager le même pattern
+                // (28 « Francs » seq 48 et 28 « EURO*00* » seq 49), et la suivante donnerait
+                // silencieusement une quantité fausse.
+                Log.warnf("Scan %s abandonné : transformation non gérée sur la règle « %s »",
+                        scanned, rule.name());
+                return Optional.empty();
+            }
             String zeroed = scanned.substring(0, m.start(1))
                     + "0".repeat(m.end(1) - m.start(1))
                     + scanned.substring(m.end(1));
             String base12 = zeroed.substring(0, 12);
-            return Optional.of(new ScaleMatch(base12 + ean13Checksum(base12), rule.type(), value));
+            return Optional.of(new ScaleMatch(base12 + ean13Checksum(base12), rule.type(), value.getAsDouble()));
         }
         return Optional.empty();
     }

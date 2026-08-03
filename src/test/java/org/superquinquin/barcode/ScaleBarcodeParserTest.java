@@ -6,12 +6,17 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScaleBarcodeParserTest {
 
     private static CompiledRule rule(String pattern, BarcodeRuleType type, int sequence) {
-        return ScaleBarcodeParser.compile("test " + pattern, sequence, type, pattern).orElseThrow();
+        return rule(pattern, type, sequence, null);
+    }
+
+    private static CompiledRule rule(String pattern, BarcodeRuleType type, int sequence, String transformExpr) {
+        return ScaleBarcodeParser.compile("test " + pattern, sequence, type, pattern, transformExpr).orElseThrow();
     }
 
     @Test
@@ -27,10 +32,52 @@ class ScaleBarcodeParserTest {
 
     @Test
     void compileRejectsPatternsWithoutValueBlock() {
-        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, ".*").isEmpty());
-        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, "041").isEmpty());
-        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, null).isEmpty());
-        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, "22{}..").isEmpty());
+        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, ".*", null).isEmpty());
+        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, "041", null).isEmpty());
+        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, null, null).isEmpty());
+        assertTrue(ScaleBarcodeParser.compile("x", 1, BarcodeRuleType.WEIGHT, "22{}..", null).isEmpty());
+    }
+
+    @Test
+    void compileParsesTransformExpr() {
+        assertEquals(new BarcodeTransform.Arithmetic('/', 6.55957),
+                rule("28.....{NNNDD}", BarcodeRuleType.PRICE_TO_WEIGHT, 48, "value / 6.55957").transform());
+        assertEquals(new BarcodeTransform.Arithmetic('*', -1),
+                rule("999....{NNNDD}", BarcodeRuleType.PRICE_TO_WEIGHT, 37, "value * -1").transform());
+        // Odoo renvoie `false` pour un champ vide : le service le normalise en null avant compile
+        assertEquals(new BarcodeTransform.Identity(),
+                rule("22.....{NNDDD}", BarcodeRuleType.WEIGHT, 1, null).transform());
+        assertEquals(new BarcodeTransform.Identity(),
+                rule("22.....{NNDDD}", BarcodeRuleType.WEIGHT, 1, "  ").transform());
+    }
+
+    @Test
+    void compileFlagsUnsupportedTransformExpr() {
+        for (String expr : List.of("value / (2 + 3)", "value / 0", "2 * value", "round(value)")) {
+            assertInstanceOf(BarcodeTransform.Unsupported.class,
+                    rule("22.....{NNDDD}", BarcodeRuleType.WEIGHT, 1, expr).transform(),
+                    expr + " devrait être refusée");
+        }
+    }
+
+    @Test
+    void matchAppliesTransformExpr() {
+        // 2852631028964 : la balance imprime 28,96 FRANCS → 4,4149 € (règle « Price Barcodes (Francs) (28) »)
+        Optional<ScaleMatch> m = ScaleBarcodeParser.match(
+                List.of(rule("28.....{NNNDD}", BarcodeRuleType.PRICE_TO_WEIGHT, 48, "value / 6.55957")),
+                "2852631028964");
+        assertEquals(28.96 / 6.55957, m.orElseThrow().value(), 1e-9);
+        assertEquals("2852631000007", m.orElseThrow().baseBarcode());
+    }
+
+    @Test
+    void matchAbortsInsteadOfFallingThroughOnUnsupportedTransform() {
+        // Cas réel : deux règles au pattern identique (28 « Francs » seq 48, 28 « EURO*00* » seq 49).
+        // Si la transformation de la première est illisible, la seconde ne doit PAS prendre le relais.
+        List<CompiledRule> rules = List.of(
+                rule("28.....{NNNDD}", BarcodeRuleType.PRICE_TO_WEIGHT, 48, "round(value / 6.55957)"),
+                rule("28.....{NNNDD}", BarcodeRuleType.PRICE_TO_WEIGHT, 49, null));
+        assertTrue(ScaleBarcodeParser.match(rules, "2852631028964").isEmpty());
     }
 
     @Test

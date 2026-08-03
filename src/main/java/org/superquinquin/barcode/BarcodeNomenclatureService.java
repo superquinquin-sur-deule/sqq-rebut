@@ -19,7 +19,8 @@ public class BarcodeNomenclatureService {
 
     private static final Duration TTL = Duration.ofHours(1);
     private static final Duration RETRY_DELAY = Duration.ofMinutes(1);
-    private static final List<String> FIELDS = List.of("name", "sequence", "encoding", "type", "pattern");
+    private static final List<String> FIELDS =
+            List.of("name", "sequence", "encoding", "type", "pattern", "transform_expr");
 
     @Inject
     OdooClient odoo;
@@ -63,14 +64,24 @@ public class BarcodeNomenclatureService {
                 BarcodeRuleType.fromOdoo(r.path("type").asText())
                         .flatMap(type -> ScaleBarcodeParser.compile(
                                 r.path("name").asText(), r.path("sequence").asInt(), type,
-                                r.path("pattern").asText(null)))
-                        .ifPresentOrElse(rules::add,
-                                () -> Log.warnf("Règle barcode.rule ignorée (pattern non géré) : %s — %s",
-                                        r.path("name").asText(), r.path("pattern").asText()));
+                                text(r.path("pattern")), text(r.path("transform_expr"))))
+                        .ifPresentOrElse(rule -> {
+                            if (rule.transform() instanceof BarcodeTransform.Unsupported u) {
+                                Log.warnf("Règle barcode.rule « %s » : transform_expr non interprétable (%s)"
+                                        + " — les scans correspondants seront refusés", rule.name(), u.expr());
+                            }
+                            rules.add(rule);
+                        }, () -> Log.warnf("Règle barcode.rule ignorée (pattern non géré) : %s — %s",
+                                r.path("name").asText(), r.path("pattern").asText()));
             }
         }
         rules.sort(Comparator.comparingInt(CompiledRule::sequence));
         Log.infof("%d règles balance chargées depuis barcode.rule", rules.size());
         return List.copyOf(rules);
+    }
+
+    /** Odoo renvoie `false` pour un champ texte vide : {@code asText()} donnerait la chaîne "false". */
+    private static String text(JsonNode n) {
+        return n.isTextual() ? n.asText() : null;
     }
 }

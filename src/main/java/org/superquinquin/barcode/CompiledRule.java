@@ -8,5 +8,6 @@ public record CompiledRule(
         BarcodeRuleType type,
         Pattern regex,
         int intDigits,
-        int decDigits) {
+        int decDigits,
+        BarcodeTransform transform) {
 }

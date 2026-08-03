@@ -49,6 +49,20 @@ class ProductResourceTest {
     }
 
     @Test
+    void lookupFrancsScaleBarcodeAppliesTransformExpr() {
+        // Balance en francs : 28,96 F / 6,55957 = 4,4149 € ; / 25,52 €/kg = 0,173 kg
+        given()
+                .when().get("/api/products/" + WireMockOdooResource.FRANCS_SCALE_BARCODE)
+                .then().statusCode(200)
+                .body("id", is(33639))
+                .body("barcode", is(WireMockOdooResource.FRANCS_BASE_BARCODE))
+                .body("rayon", is("Fromages"))
+                .body("uom", is("kg"))
+                .body("soldByWeight", is(true))
+                .body("scannedWeight", is(0.173f));
+    }
+
+    @Test
     void lookupUpcaScanWithoutSystemCharIsNormalized() {
         given()
                 .when().get("/api/products/" + WireMockOdooResource.PRICE_SCALE_BARCODE.substring(1))

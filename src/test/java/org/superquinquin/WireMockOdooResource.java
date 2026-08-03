@@ -18,6 +18,9 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
     public static final String SCALE_BARCODE = "2200145012342";
     public static final String PRICE_SCALE_BARCODE = "0200145007135";
     public static final String PRICE_BASE_BARCODE = "0200145000006";
+    // Balance imprimant en francs : 28,96 F embarqués → 4,4149 € → 0,173 kg à 25,52 €/kg
+    public static final String FRANCS_SCALE_BARCODE = "2852631028964";
+    public static final String FRANCS_BASE_BARCODE = "2852631000007";
     public static final String KNOWN_QUERY = "saucisse";
     public static final long NO_BARCODE_PRODUCT_ID = 51000;
     public static final String NO_BARCODE_QUERY = "salade";
@@ -66,6 +69,20 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                         + "\"list_price\":14.26,"
                         + "\"categ_id\":[239,\"Produits frais / Viandes locales\"],"
                         + "\"qty_available\":1.5}]}")));
+
+        // product.product search_read — base d'un code balance en francs (transform_expr)
+        server.stubFor(post(urlEqualTo("/jsonrpc"))
+                .atPriority(2)
+                .withRequestBody(containing("product.product"))
+                .withRequestBody(containing(FRANCS_BASE_BARCODE))
+                .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":[{"
+                        + "\"id\":33639,"
+                        + "\"barcode\":\"" + FRANCS_BASE_BARCODE + "\","
+                        + "\"name\":\"FD Saint nectaire AOP 29% 200g\","
+                        + "\"uom_id\":[3,\"kg\"],"
+                        + "\"list_price\":25.52,"
+                        + "\"categ_id\":[187,\"Crémerie fromagerie / Fromages\"],"
+                        + "\"qty_available\":1.236}]}")));
 
         // product.product search_read par nom (ilike) — requête connue
         server.stubFor(post(urlEqualTo("/jsonrpc"))
@@ -118,17 +135,24 @@ public class WireMockOdooResource implements QuarkusTestResourceLifecycleManager
                         + "\"categ_id\":[300,\"Produits frais / Fruits et légumes\"],"
                         + "\"qty_available\":12.0}]}")));
 
-        // barcode.rule search_read — règles balance (la règle encoding!=ean13 doit être ignorée)
+        // barcode.rule search_read — règles balance (la règle encoding!=ean13 doit être ignorée).
+        // NB : `transform_expr` sort en `false` (booléen) quand il est vide, comme dans Odoo réel.
         server.stubFor(post(urlEqualTo("/jsonrpc"))
                 .atPriority(2)
                 .withRequestBody(containing("barcode.rule"))
                 .willReturn(okJson("{\"jsonrpc\":\"2.0\",\"result\":["
                         + "{\"id\":119,\"name\":\"Weight Barcodes 3 Decimals (22)\",\"sequence\":22,"
-                        + "\"encoding\":\"ean13\",\"type\":\"weight\",\"pattern\":\"22.....{NNDDD}\"},"
+                        + "\"encoding\":\"ean13\",\"type\":\"weight\",\"pattern\":\"22.....{NNDDD}\","
+                        + "\"transform_expr\":false},"
                         + "{\"id\":118,\"name\":\"Price Look Up Codes (PLU Codes)\",\"sequence\":16,"
-                        + "\"encoding\":\"ean13\",\"type\":\"price_to_weight\",\"pattern\":\"02.....{NNNDD}\"},"
+                        + "\"encoding\":\"ean13\",\"type\":\"price_to_weight\",\"pattern\":\"02.....{NNNDD}\","
+                        + "\"transform_expr\":false},"
+                        + "{\"id\":136,\"name\":\"Price Barcodes (Francs) (28)\",\"sequence\":48,"
+                        + "\"encoding\":\"ean13\",\"type\":\"price_to_weight\",\"pattern\":\"28.....{NNNDD}\","
+                        + "\"transform_expr\":\"value / 6.55957\"},"
                         + "{\"id\":7,\"name\":\"Any-encoding rule\",\"sequence\":1,"
-                        + "\"encoding\":\"any\",\"type\":\"weight\",\"pattern\":\"21.....{NNDDD}\"}]}")));
+                        + "\"encoding\":\"any\",\"type\":\"weight\",\"pattern\":\"21.....{NNDDD}\","
+                        + "\"transform_expr\":false}]}")));
 
         // product.product search_read — inconnu (catch-all)
         server.stubFor(post(urlEqualTo("/jsonrpc"))
