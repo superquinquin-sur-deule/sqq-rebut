@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.18.0...v0.18.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* better handling of barcode rules ([abaac8d](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/abaac8d49bbdb96b3abdc918e52bdb12504b193e))
+
 ## [0.18.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.17.0...v0.18.0) (2026-06-25)
 
 
