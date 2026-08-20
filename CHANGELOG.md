@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.2](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.18.1...v0.18.2) (2026-08-20)
+
+
+### Bug Fixes
+
+* update dlc depassée motif id ([7574a59](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/7574a5917f8ce54f59d3aae818e7ae7de33dcee3))
+
 ## [0.18.1](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.18.0...v0.18.1) (2026-08-03)
 
 
