@@ -34,7 +34,7 @@ public interface OdooConfig {
     }
 
     interface Scrap {
-        @WithDefault("7")
+        @WithDefault("16")
         int originId();
 
         @WithDefault("12")

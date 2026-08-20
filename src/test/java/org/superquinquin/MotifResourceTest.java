@@ -19,6 +19,6 @@ class MotifResourceTest {
                 .then().statusCode(200)
                 .body("size()", is(4))
                 .body("label", hasItem("Casse"))
-                .body("id", hasItem(7));
+                .body("id", hasItem(16));
     }
 }
