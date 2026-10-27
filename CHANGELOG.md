@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.18.2...v0.19.0) (2026-10-27)
+
+
+### Features
+
+* group scannette dlc lines by urgency under global Suivi DLC label ([dd7e832](https://github.com/superquinquin-sur-deule/sqq-rebut/commit/dd7e832cd30bdf4708a3a268d612f3021e316c7c))
+
 ## [0.18.2](https://github.com/superquinquin-sur-deule/sqq-rebut/compare/v0.18.1...v0.18.2) (2026-08-20)
 
 
