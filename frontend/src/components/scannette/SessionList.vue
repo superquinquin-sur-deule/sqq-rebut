@@ -4,6 +4,7 @@ import Icon from '../Icon.vue';
 import RebutMotifModal from './RebutMotifModal.vue';
 import SessionLine from './SessionLine.vue';
 import { useReleveStore } from '../../store/releve';
+import { URG, type Urgency } from '../../lib/dates';
 import type { ReleveLineDto } from '../../api';
 
 const props = defineProps<{ lines: ReleveLineDto[]; mode: 'menu' | 'dlc' | 'perte' | 'stock' }>();
@@ -17,23 +18,43 @@ const modeType = computed(() =>
 const visible = computed(() => (modeType.value ? props.lines.filter((l) => l.type === modeType.value) : props.lines));
 const sorted = computed(() => [...visible.value].sort((a, b) => (b.id ?? 0) - (a.id ?? 0)));
 
-const groups = computed(() => {
-  if (!modeType.value) {
-    // Mode menu : on garde la vue globale en trois sections.
-    const sent = sorted.value.filter((l) => l.sent);
-    const reassort = sorted.value.filter((l) => !l.sent && l.type === 'REASSORT');
-    const dlc = sorted.value.filter((l) => !l.sent && l.type !== 'REASSORT');
-    return [
-      { key: 'sent', title: 'Envoyé au rebut', lines: sent },
-      { key: 'reassort', title: 'Réassort', lines: reassort },
-      { key: 'dlc', title: 'Suivi DLC', lines: dlc },
-    ].filter((g) => g.lines.length);
-  }
-  const pendingTitle = props.mode === 'perte' ? 'Pertes' : props.mode === 'stock' ? 'Réassort' : 'Suivi DLC';
-  return [
-    { key: 'pending', title: pendingTitle, lines: sorted.value.filter((l) => !l.sent) },
-    { key: 'sent', title: 'Envoyé au rebut', lines: sorted.value.filter((l) => l.sent) },
-  ].filter((g) => g.lines.length);
+type Group = { key: string; title?: string; urg?: Urgency; lines: ReleveLineDto[] };
+type Section = { key: string; title: string; count: number; groups: Group[] };
+
+function flat(key: string, title: string, lines: ReleveLineDto[]): Section {
+  return { key, title, count: lines.length, groups: [{ key, lines }] };
+}
+
+function dlcSection(lines: ReleveLineDto[]): Section {
+  const groups = (['j0', 'j1', 'j2'] as Urgency[])
+    .map((k) => ({
+      key: k,
+      title: `${URG[k].tag} · ${URG[k].label}`,
+      urg: k,
+      lines: lines.filter((l) => l.urgency === k),
+    }))
+    .filter((g) => g.lines.length);
+  return { key: 'dlc', title: 'Suivi DLC', count: lines.length, groups };
+}
+
+const sections = computed<Section[]>(() => {
+  const pending = sorted.value.filter((l) => !l.sent);
+  const sent = flat('sent', 'Envoyé au rebut', sorted.value.filter((l) => l.sent));
+  const list = !modeType.value
+    ? // Mode menu : vue globale, le suivi DLC sous-groupé par urgence.
+      [
+        sent,
+        flat('reassort', 'Réassort', pending.filter((l) => l.type === 'REASSORT')),
+        flat('perte', 'Pertes', pending.filter((l) => l.type === 'PERTE')),
+        dlcSection(pending.filter((l) => l.type === 'DLC')),
+      ]
+    : [
+        props.mode === 'dlc'
+          ? dlcSection(pending)
+          : flat('pending', props.mode === 'perte' ? 'Pertes' : 'Réassort', pending),
+        sent,
+      ];
+  return list.filter((s) => s.count);
 });
 
 const unsentPerte = computed(() => sorted.value.filter((l) => l.type === 'PERTE' && !l.sent));
@@ -90,15 +111,20 @@ onUnmounted(() => window.clearTimeout(msgTimer));
   </div>
   <template v-else>
     <div class="sess-scroll">
-      <template v-for="g in groups" :key="g.key">
-        <div class="sess-group-head">{{ g.title }} · {{ g.lines.length }}</div>
-        <SessionLine
-          v-for="l in g.lines"
-          :key="l.id"
-          :line="l"
-          @select="emit('select', l)"
-          @remove="removeLine(l)"
-        />
+      <template v-for="s in sections" :key="s.key">
+        <div class="sess-group-head">{{ s.title }} · {{ s.count }}</div>
+        <template v-for="g in s.groups" :key="g.key">
+          <div v-if="g.urg" class="sess-group-sub">
+            <span class="urgdot" :class="g.urg" />{{ g.title }} · {{ g.lines.length }}
+          </div>
+          <SessionLine
+            v-for="l in g.lines"
+            :key="l.id"
+            :line="l"
+            @select="emit('select', l)"
+            @remove="removeLine(l)"
+          />
+        </template>
       </template>
     </div>
 

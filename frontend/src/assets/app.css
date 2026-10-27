@@ -1146,6 +1146,34 @@ input, select {
     margin-top: 8px;
 }
 
+.sess-group-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sqq-brown-soft);
+    padding: 6px 2px 0 10px;
+}
+
+.sess-group-sub .urgdot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sess-group-sub .urgdot.j1 {
+    background: var(--sqq-orange);
+}
+
+.sess-group-sub .urgdot.j2 {
+    background: var(--sqq-yellow);
+}
+
 .sess-row {
     position: relative;
 }
